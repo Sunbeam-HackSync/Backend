@@ -21,13 +21,17 @@ public class ProjectSubmissions {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "hackathon_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hackathon_id", nullable = false)
     private Hackathons hackathonId;
 
-    @Column(name = "track_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "track_id")
     private HackathonTracks trackId;
 
-    @Column(name = "team_id")
+    //1 team 1 project
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "team_id", nullable = false)
     private Teams teamsId;
 
     @Column(name = "project_title")

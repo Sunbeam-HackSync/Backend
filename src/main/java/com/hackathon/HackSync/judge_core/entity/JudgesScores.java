@@ -21,13 +21,16 @@ public class JudgesScores {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "judge_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "judge_id", nullable = false)
     private Users judgeId;
 
-    @Column(name = "project_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id", nullable = false)
     private ProjectSubmissions projectId;
 
-    @Column(name = "criteria_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "criteria_id", nullable = false)
     private EvaluationCriteria criteriaId;
 
     @Column(name = "score_given")

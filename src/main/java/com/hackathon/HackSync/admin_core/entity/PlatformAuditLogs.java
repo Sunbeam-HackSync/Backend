@@ -21,7 +21,8 @@ public class PlatformAuditLogs {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @Column(name = "actor_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "actor_id", nullable = false)
     private Users actorId;
 
     @Column(name = "action_type")

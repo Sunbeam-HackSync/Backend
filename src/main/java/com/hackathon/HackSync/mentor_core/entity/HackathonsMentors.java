@@ -20,10 +20,12 @@ public class HackathonsMentors {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "hackathon_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hackathon_id", nullable = false)
     private Hackathons hackathonId;
 
-    @Column(name = "mentor_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mentor_id", nullable = false)
     private Users mentorsId;
 
     @Column(name = "expertise_tags")

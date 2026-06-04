@@ -19,7 +19,8 @@ public class EvaluationCriteria {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "hackathons_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hackathon_id", nullable = false)
     private Hackathons hackathonId;
 
     @Column(name = "criteria_name")

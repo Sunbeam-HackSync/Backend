@@ -22,7 +22,8 @@ public class PlatformReports {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "reporter_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reporter_id", nullable = false)
     private Users reporterId;
 
     @Column(name = "entity_type")
@@ -40,7 +41,8 @@ public class PlatformReports {
     @Enumerated(EnumType.STRING)
     private PlatformStatus status;
 
-    @Column(name = "resolved_by")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "resolved_by")
     private Users resolvedBy;
 
     @CreationTimestamp

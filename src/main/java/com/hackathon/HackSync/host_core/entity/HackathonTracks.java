@@ -20,8 +20,8 @@ public class HackathonTracks {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "hackathon_id")
-    //TODO mapping to hackathons table
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hackathon_id", nullable = false)
     private Hackathons hackathonId;
 
     @Column(name = "title")

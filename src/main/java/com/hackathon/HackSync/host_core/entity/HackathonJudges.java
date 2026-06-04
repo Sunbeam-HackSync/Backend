@@ -19,25 +19,19 @@ public class HackathonJudges {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "hackathons_id")
-    //TODO add hackathons mapping
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hackathon_id", nullable = false)
     private Hackathons hackathonsId;
 
-    @Column(name = "judge_user_id")
-    //TODO add user mapping
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "judge_user_id", nullable = false)
     private Users judgeUserId;
 
-    @Column(name = "track_id")
-    //TODO add track mapping
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "track_id")
     private HackathonTracks tracksId;
 
     @Column(name = "assigned_at")
     private LocalDateTime assignedAt;
-    //id
-    //hackthon_id
-    //judge_user_id
-    //track_id
-    //status
-    //assigned_at
 
 }

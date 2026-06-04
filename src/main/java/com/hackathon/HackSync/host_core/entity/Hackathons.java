@@ -24,7 +24,8 @@ public class Hackathons {
     private UUID hackathonId;
 
     //TODO mapping to user Table
-    @Column(name = "host_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "host_id", nullable = false)
     private Users hostId;
 
     @Column(name = "title")

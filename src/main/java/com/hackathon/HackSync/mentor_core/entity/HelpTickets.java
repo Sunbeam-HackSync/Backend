@@ -21,16 +21,20 @@ public class HelpTickets {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "hackathon_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hackathon_id", nullable = false)
     private Hackathons hackathonId;
 
-    @Column(name = "team_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "team_id", nullable = false)
     private Teams teamId;
 
-    @Column(name = "creator_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "creator_id", nullable = false)
     private Users creatorId;
 
-    @Column(name = "assigned_mentor_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_mentor_id")
     private Users assignedMentorId;
 
     @Column(name = "issue_title")

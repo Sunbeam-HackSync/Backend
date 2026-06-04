@@ -21,8 +21,8 @@ public class Teams {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "hackthon_id")
-    //TODO mapping to hackthons
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hackathon_id", nullable = false)
     private Hackathons hackthonId;
 
     @Column(name = "team_name")

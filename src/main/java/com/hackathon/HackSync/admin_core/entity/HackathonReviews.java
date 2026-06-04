@@ -20,12 +20,12 @@ public class HackathonReviews {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "hackathon_id")
-    //TODO hackathons mapping
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hackathon_id", nullable = false)
     private Hackathons hackathon_id;
 
-    @Column(name = "admin_id")
-    //TODO Users mapping
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "admin_id", nullable = false)
     private Users admin_id;
 
     @Column(name = "review_status")

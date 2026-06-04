@@ -1,10 +1,10 @@
 package com.hackathon.HackSync.participants_core.entity;
 
+import com.hackathon.HackSync.auth.entity.Users;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.security.core.userdetails.User;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -20,9 +20,9 @@ public class ParticipantsProfiles {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "user_id")
-    //TODO add mapping
-    private User userId;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    private Users userId;
 
     @Column(name = "full_name")
     private String fullName;

@@ -18,12 +18,12 @@ public class HackathonPrizes {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "hackathon_id")
-    //TODO mapping to hackathon table
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hackathon_id", nullable = false)
     private Hackathons hackathonId;
 
-    @Column(name = "track_id")
-    //TODO mapping to hackathon table
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "track_id")
     private HackathonTracks trackId;
 
     @Column(name = "title")
@@ -34,10 +34,4 @@ public class HackathonPrizes {
 
     @Column(columnDefinition = "TEXT")
     private String description;
-    // id
-    //hackthon_id
-    //track_id
-    //title
-    //reward_value
-    //description
 }
