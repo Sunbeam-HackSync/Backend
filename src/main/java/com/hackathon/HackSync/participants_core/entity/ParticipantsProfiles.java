@@ -21,6 +21,7 @@ public class ParticipantsProfiles {
     private UUID id;
 
     @Column(name = "user_id")
+    //TODO add mapping
     private User userId;
 
     @Column(name = "full_name")

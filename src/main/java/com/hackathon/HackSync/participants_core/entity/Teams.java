@@ -1,5 +1,6 @@
 package com.hackathon.HackSync.participants_core.entity;
 
+import com.hackathon.HackSync.host_core.entity.Hackathons;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,8 +21,9 @@ public class Teams {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-//    @Column(name = "hackthon_id")
-//    private Hackthons hackthonId;
+    @Column(name = "hackthon_id")
+    //TODO mapping to hackthons
+    private Hackathons hackthonId;
 
     @Column(name = "team_name")
     private String teamName;
