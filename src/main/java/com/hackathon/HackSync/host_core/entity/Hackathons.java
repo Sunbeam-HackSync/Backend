@@ -23,7 +23,6 @@ public class Hackathons {
     @Column(name = "hackathon_id")
     private UUID hackathonId;
 
-    //TODO mapping to user Table
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "host_id", nullable = false)
     private Users hostId;
@@ -39,11 +38,14 @@ public class Hackathons {
     @Column(name = "banner_image_url")
     private String bannerImageUrl;
 
+    @Column(name = "profile_image_url")
+    private String profileImageUrl;
+
     @Column(name = "min_team_size")
-    private int minTeamSize;
+    private Integer minTeamSize;
 
     @Column(name = "max_team_size")
-    private int maxTeamSize;
+    private Integer maxTeamSize;
 
     @Column(name = "registration_start")
     private LocalDateTime registrationStart;
