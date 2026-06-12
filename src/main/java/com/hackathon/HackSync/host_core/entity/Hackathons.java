@@ -1,27 +1,25 @@
 package com.hackathon.HackSync.host_core.entity;
 
 import com.hackathon.HackSync.auth.entity.Users;
+import com.hackathon.HackSync.utils.entities.BaseClass;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Data
+
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "hackathons")
-public class Hackathons {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "hackathon_id")
-    private UUID hackathonId;
+@Getter
+@Setter
+@ToString(callSuper = true, exclude = "hostId")
+@AttributeOverride(name = "id", column = @Column(name = "hackathon _id"))
+public class Hackathons extends BaseClass {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "host_id", nullable = false)
@@ -62,12 +60,4 @@ public class Hackathons {
     @Column(name = "hackathon_status")
     @Enumerated(EnumType.STRING)
     private HackathonStatus hackathonStatus;
-
-    @CreationTimestamp
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 }

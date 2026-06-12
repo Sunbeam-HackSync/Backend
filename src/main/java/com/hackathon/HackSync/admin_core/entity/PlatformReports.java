@@ -1,10 +1,9 @@
 package com.hackathon.HackSync.admin_core.entity;
 
 import com.hackathon.HackSync.auth.entity.Users;
+import com.hackathon.HackSync.utils.entities.BaseClass;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -12,11 +11,14 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
+@Setter
+@ToString(callSuper = true, exclude = {"reporterId", "resolvedBy"})
 @Table(name = "platform_reports")
-public class PlatformReports {
+@AttributeOverride(name = "id", column = @Column(name = "platform_reports_id"))
+public class PlatformReports extends BaseClass {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -45,11 +47,4 @@ public class PlatformReports {
     @JoinColumn(name = "resolved_by")
     private Users resolvedBy;
 
-    @CreationTimestamp
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 }

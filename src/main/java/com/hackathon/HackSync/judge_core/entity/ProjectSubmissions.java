@@ -3,24 +3,22 @@ package com.hackathon.HackSync.judge_core.entity;
 import com.hackathon.HackSync.host_core.entity.HackathonTracks;
 import com.hackathon.HackSync.host_core.entity.Hackathons;
 import com.hackathon.HackSync.participants_core.entity.Teams;
+import com.hackathon.HackSync.utils.entities.BaseClass;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
+@Getter
+@Setter
+@ToString(callSuper = true, exclude = {"hackathonId", "trackId", "teamsId"})
 @Entity
+@AttributeOverride(name = "id", column = @Column(name = "project_submission_id"))
 @Table(name = "project_submissions")
-public class ProjectSubmissions {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
+public class ProjectSubmissions extends BaseClass {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hackathon_id", nullable = false)
     private Hackathons hackathonId;

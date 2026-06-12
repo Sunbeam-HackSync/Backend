@@ -2,23 +2,20 @@ package com.hackathon.HackSync.mentor_core.entity;
 
 import com.hackathon.HackSync.auth.entity.Users;
 import com.hackathon.HackSync.host_core.entity.Hackathons;
+import com.hackathon.HackSync.utils.entities.BaseClass;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
+@Getter
+@Setter
+@ToString(callSuper = true, exclude = {"hackathonId", "mentorsId"})
 @Table(name = "hackathons_mentors")
-public class HackathonsMentors {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class HackathonsMentors extends BaseClass {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hackathon_id", nullable = false)
@@ -26,6 +23,7 @@ public class HackathonsMentors {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mentor_id", nullable = false)
+    @MapsId
     private Users mentorsId;
 
     @Column(name = "expertise_tags")
@@ -34,6 +32,4 @@ public class HackathonsMentors {
     @Enumerated(EnumType.STRING)
     private MentorStatus status;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
 }

@@ -2,31 +2,30 @@ package com.hackathon.HackSync.admin_core.entity;
 
 import com.hackathon.HackSync.auth.entity.Users;
 import com.hackathon.HackSync.host_core.entity.Hackathons;
+import com.hackathon.HackSync.utils.entities.BaseClass;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
 @AllArgsConstructor
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @Table(name = "hackathons_reviews")
-public class HackathonReviews {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+@AttributeOverride(name = "id", column = @Column(name = "hackathon_review_id"))
+@ToString(callSuper = true, exclude = {"hackathonId", "adminId"})
+public class HackathonReviews extends BaseClass {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hackathon_id", nullable = false)
-    private Hackathons hackathon_id;
+    private Hackathons hackathonId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "admin_id", nullable = false)
-    private Users admin_id;
+    private Users adminId;
 
     @Column(name = "review_status")
     @Enumerated(EnumType.STRING)

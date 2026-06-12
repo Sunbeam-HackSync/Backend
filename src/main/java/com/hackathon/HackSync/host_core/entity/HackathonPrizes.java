@@ -1,22 +1,20 @@
 package com.hackathon.HackSync.host_core.entity;
 
+import com.hackathon.HackSync.utils.entities.BaseClass;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.UUID;
 
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
+@Getter
+@Setter
+@ToString(callSuper = true, exclude = {"hackathonId", "trackId"})
 @Table(name = "hackathon_prizes")
-public class HackathonPrizes {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+@AttributeOverride(name = "id", column = @Column(name = "hackathon_prize_id"))
+public class HackathonPrizes extends BaseClass {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hackathon_id", nullable = false)

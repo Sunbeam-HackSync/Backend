@@ -10,6 +10,8 @@ import com.hackathon.HackSync.host_core.repository.HackathonRepository;
 import com.hackathon.HackSync.host_core.responses.HackathonResponse;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 public class HackathonService {
 
@@ -49,12 +51,21 @@ public class HackathonService {
         Hackathons savedHackathon = hackathonRepository.save(hackathon);
 
         return HackathonResponse.builder()
-                .id(savedHackathon.getHackathonId())
+                .id(savedHackathon.getId())
                 .title(savedHackathon.getTitle())
                 .tagline(savedHackathon.getTagline())
                 .hackathonStatus(savedHackathon.getHackathonStatus())
                 .hackathonStarts(savedHackathon.getHackathonStart())
                 .hackathonEnds(savedHackathon.getHackathonEnd())
                 .build();
+    }
+
+    public Hackathons getHackathonById(UUID hackId, String authenticatedEmail) {
+        Users host = userRepository.findByEmail(authenticatedEmail).orElseThrow(() -> new RuntimeException("Host does not exists"));
+
+        if (!host.getRole().equals(ROLE.HOST)) {
+            // TODO throw new custom exception not allowed and return null;
+        }
+        return hackathonRepository.getReferenceById(hackId);
     }
 }

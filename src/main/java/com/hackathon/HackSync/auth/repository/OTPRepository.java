@@ -14,6 +14,5 @@ public interface OTPRepository extends JpaRepository<OTPVerification, UUID> {
 
     List<OTPVerification> findByUserAndIsUsedFalse(Users user);
 
-    ;
 
 }

@@ -1,24 +1,22 @@
 package com.hackathon.HackSync.host_core.entity;
 
+import com.hackathon.HackSync.utils.entities.BaseClass;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
+@AttributeOverride(name = "id", column = @Column(name = "hackathon_track_id"))
 @Table(name = "hackathon_tracks")
-public class HackathonTracks {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+@Getter
+@Setter
+@ToString(callSuper = true, exclude = "hackathonId")
+public class HackathonTracks extends BaseClass {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hackathon_id", nullable = false)
@@ -29,7 +27,4 @@ public class HackathonTracks {
 
     @Column(columnDefinition = "TEXT")
     private String description;
-
-    @CreationTimestamp
-    private LocalDateTime createdAt;
 }

@@ -3,24 +3,20 @@ package com.hackathon.HackSync.mentor_core.entity;
 import com.hackathon.HackSync.auth.entity.Users;
 import com.hackathon.HackSync.host_core.entity.Hackathons;
 import com.hackathon.HackSync.participants_core.entity.Teams;
+import com.hackathon.HackSync.utils.entities.BaseClass;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
+@Setter
+@ToString(callSuper = true, exclude = {"hackathonId", "teamId", "creatorId", "assignedMentorId"})
 @Table(name = "help_tickets")
-public class HelpTickets {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
+public class HelpTickets extends BaseClass {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hackathon_id", nullable = false)
     private Hackathons hackathonId;
@@ -52,9 +48,6 @@ public class HelpTickets {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private TicketStatus status;
-
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
 
     @Column(name = "claimed_at")
     private LocalDateTime claimedAt;

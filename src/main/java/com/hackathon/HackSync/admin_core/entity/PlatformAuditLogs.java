@@ -1,10 +1,9 @@
 package com.hackathon.HackSync.admin_core.entity;
 
 import com.hackathon.HackSync.auth.entity.Users;
+import com.hackathon.HackSync.utils.entities.BaseClass;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -12,14 +11,13 @@ import java.util.UUID;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
+@Getter
+@Setter
+@ToString(callSuper = true, exclude = "actorId")
 @Entity
 @Table(name = "platform_audit_logs")
-public class PlatformAuditLogs {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+@AttributeOverride(name = "id", column = @Column(name = "audit_logs_id"))
+public class PlatformAuditLogs extends BaseClass {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "actor_id", nullable = false)
@@ -37,7 +35,4 @@ public class PlatformAuditLogs {
     @Column(name = "ip_address")
     private String ipAddress;
 
-    @Column(name = "created_at")
-    @CreationTimestamp
-    private LocalDateTime createdAt;
 }

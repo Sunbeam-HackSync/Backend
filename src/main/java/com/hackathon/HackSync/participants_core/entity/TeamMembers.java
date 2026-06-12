@@ -1,26 +1,23 @@
 package com.hackathon.HackSync.participants_core.entity;
 
 import com.hackathon.HackSync.auth.entity.Users;
+import com.hackathon.HackSync.utils.entities.BaseClass;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "team_members")
-public class TeamMembers {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
+@Getter
+@Setter
+@ToString(callSuper = true, exclude = {"teamsId", "userId"})
+public class TeamMembers extends BaseClass {
     @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId
     @JoinColumn(name = "team_id", nullable = false)
     private Teams teamsId;
 

@@ -1,9 +1,8 @@
 package com.hackathon.HackSync.auth.entity;
 
+import com.hackathon.HackSync.utils.entities.BaseClass;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -13,13 +12,11 @@ import java.util.UUID;
 @Table(name = "otp_verification")
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
-public class OTPVerification {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false)
-    private UUID id;
+@Getter
+@Setter
+@ToString(callSuper = true, exclude = "user")
+@AttributeOverride(name = "id", column = @Column(name = "otp_verification_id"))
+public class OTPVerification extends BaseClass {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -33,10 +30,5 @@ public class OTPVerification {
 
     @Column(name = "is_used")
     private boolean isUsed = false;
-
-    @CreationTimestamp
-    @Column(name = "create_at")
-    private LocalDateTime createdAt;
-
 
 }

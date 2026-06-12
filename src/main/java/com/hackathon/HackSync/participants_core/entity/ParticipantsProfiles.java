@@ -1,27 +1,24 @@
 package com.hackathon.HackSync.participants_core.entity;
 
 import com.hackathon.HackSync.auth.entity.Users;
+import com.hackathon.HackSync.utils.entities.BaseClass;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
+@Setter
+@ToString(callSuper = true, exclude = "userId")
 @Table(name = "participants_profile")
-public class ParticipantsProfiles {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
+public class ParticipantsProfiles extends BaseClass {
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @MapsId
+    @JoinColumn(name = "participants_id", nullable = false, unique = true)
     private Users userId;
 
     @Column(name = "full_name")
@@ -44,7 +41,4 @@ public class ParticipantsProfiles {
 
     @Column(name = "tech_skills")
     private String techSkills;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 }

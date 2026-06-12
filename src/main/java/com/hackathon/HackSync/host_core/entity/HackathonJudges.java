@@ -1,10 +1,9 @@
 package com.hackathon.HackSync.host_core.entity;
 
 import com.hackathon.HackSync.auth.entity.Users;
+import com.hackathon.HackSync.utils.entities.BaseClass;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -12,9 +11,12 @@ import java.util.UUID;
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
+@Getter
+@Setter
+@ToString(callSuper = true, exclude = {"hackathonsId", "judgeUserId", "tracksId"})
+@AttributeOverride(name = "id", column = @Column(name = "hackathon_judge_id"))
 @Table(name = "hackathon_judges")
-public class HackathonJudges {
+public class HackathonJudges extends BaseClass {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;

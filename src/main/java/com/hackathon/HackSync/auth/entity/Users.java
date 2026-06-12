@@ -1,5 +1,6 @@
 package com.hackathon.HackSync.auth.entity;
 
+import com.hackathon.HackSync.utils.entities.BaseClass;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -17,14 +18,11 @@ import java.util.UUID;
 @Table(name = "users")
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
-public class Users implements UserDetails {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(updatable = false, nullable = false)
-    private UUID id;
-
+@Getter
+@Setter
+@ToString(callSuper = true)
+@AttributeOverride(name = "id", column = @Column(name = "user_id"))
+public class Users extends BaseClass implements UserDetails {
     @Column(unique = true, nullable = false)
     private String email;
 
@@ -39,14 +37,6 @@ public class Users implements UserDetails {
 
     @Column(name = "is_email_verified", nullable = false)
     private boolean isEmailVerified = false;
-
-    @CreationTimestamp
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
