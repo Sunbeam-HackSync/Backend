@@ -22,7 +22,8 @@ public class SecurityConfiguration {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfiguration(AuthenticationProvider authenticationProvider, JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfiguration(AuthenticationProvider authenticationProvider,
+            JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.authenticationProvider = authenticationProvider;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
@@ -31,7 +32,17 @@ public class SecurityConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/auth/**", "/actuator/**").permitAll().anyRequest().authenticated())
+                // for development purposes the acuator will be in permit all, later not it will
+                // be shifter to ADMIN role
+                // implementing the ROLE based auth for different roles
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/**", "/actuator/**").permitAll()
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/host/**").hasAnyRole("HOST", "ADMIN")
+                        .requestMatchers("/api/v1/judge/**").hasAnyRole("JUDGE", "ADMIN")
+                        .requestMatchers("/api/v1/mentor/**").hasAnyRole("MENTOR", "ADMIN")
+                        .requestMatchers("/api/v1/participants/**").hasAnyRole("PARTICIPANT", "ADMIN")
+                        .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

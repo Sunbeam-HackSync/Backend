@@ -10,6 +10,7 @@ public class HackathonRequestDTO {
     private String tagline;
     private String description;
     private String bannerImageUrl;
+    private String profileImageUrl;
     private int minTeamSize;
     private int maxTeamSize;
     private LocalDateTime registrationStart;

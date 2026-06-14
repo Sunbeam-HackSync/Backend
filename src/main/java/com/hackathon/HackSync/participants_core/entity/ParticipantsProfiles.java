@@ -5,9 +5,6 @@ import com.hackathon.HackSync.utils.entities.BaseClass;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
-
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -17,7 +14,6 @@ import java.util.UUID;
 @Table(name = "participants_profile")
 public class ParticipantsProfiles extends BaseClass {
     @OneToOne(fetch = FetchType.LAZY)
-    @MapsId
     @JoinColumn(name = "participants_id", nullable = false, unique = true)
     private Users userId;
 

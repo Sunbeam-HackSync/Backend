@@ -4,10 +4,6 @@ import com.hackathon.HackSync.auth.entity.Users;
 import com.hackathon.HackSync.utils.entities.BaseClass;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -15,14 +11,10 @@ import java.util.UUID;
 @NoArgsConstructor
 @Getter
 @Setter
-@ToString(callSuper = true, exclude = {"reporterId", "resolvedBy"})
+@ToString(callSuper = true, exclude = { "reporterId", "resolvedBy" })
 @Table(name = "platform_reports")
 @AttributeOverride(name = "id", column = @Column(name = "platform_reports_id"))
 public class PlatformReports extends BaseClass {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reporter_id", nullable = false)

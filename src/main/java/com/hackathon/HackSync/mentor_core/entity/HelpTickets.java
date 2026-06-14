@@ -8,7 +8,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -44,6 +43,9 @@ public class HelpTickets extends BaseClass {
 
     @Column(name = "contact_location", length = 255)
     private String contactLocation;
+
+    @Column(name = "meeting_link", length = 512)
+    private String meetingLink;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)

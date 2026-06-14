@@ -9,6 +9,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Entity
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -23,7 +24,6 @@ public class HackathonsMentors extends BaseClass {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mentor_id", nullable = false)
-    @MapsId
     private Users mentorsId;
 
     @Column(name = "expertise_tags")

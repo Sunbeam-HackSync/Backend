@@ -6,7 +6,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @AllArgsConstructor
@@ -17,7 +16,6 @@ import java.util.UUID;
 @ToString(callSuper = true, exclude = {"teamsId", "userId"})
 public class TeamMembers extends BaseClass {
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId
     @JoinColumn(name = "team_id", nullable = false)
     private Teams teamsId;
 

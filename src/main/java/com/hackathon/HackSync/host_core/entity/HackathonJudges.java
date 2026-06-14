@@ -36,4 +36,8 @@ public class HackathonJudges extends BaseClass {
     @Column(name = "assigned_at")
     private LocalDateTime assignedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private JudgeInvitationStatus status;
+
 }

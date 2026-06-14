@@ -18,7 +18,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @ToString(callSuper = true, exclude = "hostId")
-@AttributeOverride(name = "id", column = @Column(name = "hackathon _id"))
+@AttributeOverride(name = "id", column = @Column(name = "hackathon_id"))
 public class Hackathons extends BaseClass {
 
     @ManyToOne(fetch = FetchType.LAZY)

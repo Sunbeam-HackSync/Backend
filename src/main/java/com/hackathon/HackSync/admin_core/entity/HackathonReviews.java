@@ -7,7 +7,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @AllArgsConstructor
@@ -16,7 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Table(name = "hackathons_reviews")
 @AttributeOverride(name = "id", column = @Column(name = "hackathon_review_id"))
-@ToString(callSuper = true, exclude = {"hackathonId", "adminId"})
+@ToString(callSuper = true, exclude = { "hackathonId", "adminId" })
 public class HackathonReviews extends BaseClass {
 
     @ManyToOne(fetch = FetchType.LAZY)

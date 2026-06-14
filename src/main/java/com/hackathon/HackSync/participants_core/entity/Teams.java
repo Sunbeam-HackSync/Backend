@@ -4,10 +4,6 @@ import com.hackathon.HackSync.host_core.entity.Hackathons;
 import com.hackathon.HackSync.utils.entities.BaseClass;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @AllArgsConstructor
