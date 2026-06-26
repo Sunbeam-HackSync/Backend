@@ -54,7 +54,6 @@ public class JWTService {
     public String buildToken(HashMap<String, Object> extraClaims, UserDetails userDetails, long expiration) {
 
         String subject = ((Users) userDetails).getEmail();
-//        System.out.println("User detail subject:" + subject);
         return Jwts
                 .builder()
                 .setClaims(extraClaims)

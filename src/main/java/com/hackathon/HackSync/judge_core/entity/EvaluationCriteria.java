@@ -5,7 +5,6 @@ import com.hackathon.HackSync.utils.entities.BaseClass;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.UUID;
 
 @AllArgsConstructor
 @NoArgsConstructor

@@ -6,7 +6,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @AllArgsConstructor
@@ -17,10 +16,6 @@ import java.util.UUID;
 @AttributeOverride(name = "id", column = @Column(name = "hackathon_judge_id"))
 @Table(name = "hackathon_judges")
 public class HackathonJudges extends BaseClass {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hackathon_id", nullable = false)
     private Hackathons hackathonsId;

@@ -5,12 +5,11 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Data
 @Builder
 public class HackathonResponse {
-    private UUID id;
+    private Long id;
     private String title;
     private String tagline;
     private HackathonStatus hackathonStatus;

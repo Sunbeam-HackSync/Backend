@@ -14,7 +14,6 @@ import java.security.Principal;
 import com.hackathon.HackSync.judge_core.dto.ProjectSubmissionResponseDTO;
 import com.hackathon.HackSync.participants_core.dto.ParticipantResponseDTO;
 import java.util.List;
-import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
@@ -33,7 +32,7 @@ public class HackathonController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getHackathonById(@PathVariable UUID id, Principal principal) {
+    public ResponseEntity<?> getHackathonById(@PathVariable Long id, Principal principal) {
         String email = principal.getName();
         Hackathons hackathon = hackathonService.getHackathonById(id, email);
         return new ResponseEntity<>(hackathon, HttpStatus.OK);
@@ -41,7 +40,7 @@ public class HackathonController {
 
     @PutMapping("/{id}")
     public ResponseEntity<HackathonResponse> updateHackathon(
-            @PathVariable UUID id,
+            @PathVariable Long id,
             @RequestBody HackathonRequestDTO hackathonRequestDTO,
             Principal principal) {
         String email = principal.getName();
@@ -58,7 +57,7 @@ public class HackathonController {
 
     @GetMapping("/{id}/participants")
     public ResponseEntity<List<ParticipantResponseDTO>> getHackathonParticipants(
-            @PathVariable UUID id,
+            @PathVariable Long id,
             Principal principal) {
         String email = principal.getName();
         List<ParticipantResponseDTO> participants = hackathonService.getHackathonParticipants(id, email);
@@ -66,7 +65,7 @@ public class HackathonController {
     }
 
     @GetMapping("/{id}/submissions")
-    public ResponseEntity<List<ProjectSubmissionResponseDTO>> getHackathonSubmissions(@PathVariable UUID id,
+    public ResponseEntity<List<ProjectSubmissionResponseDTO>> getHackathonSubmissions(@PathVariable Long id,
             Principal principal) {
         String email = principal.getName();
         List<ProjectSubmissionResponseDTO> submissions = hackathonService.getHackathonSubmissions(id, email);
@@ -74,7 +73,7 @@ public class HackathonController {
     }
 
     @PostMapping("/{id}/judges")
-    public ResponseEntity<String> addJudge(@PathVariable UUID id, Principal principal,
+    public ResponseEntity<String> addJudge(@PathVariable Long id, Principal principal,
             @RequestBody InviteRequestDTO requestDTO) {
         String email = principal.getName();
         hackathonService.inviteJudge(id, requestDTO, email);
@@ -82,7 +81,7 @@ public class HackathonController {
     }
 
     @PostMapping("/{id}/mentors")
-    public ResponseEntity<String> addMentor(@PathVariable UUID id, Principal principal,
+    public ResponseEntity<String> addMentor(@PathVariable Long id, Principal principal,
             @RequestBody InviteRequestDTO requestDTO) {
         String email = principal.getName();
         hackathonService.inviteMentor(id, requestDTO, email);
@@ -91,7 +90,7 @@ public class HackathonController {
 
     @PutMapping("/{id}/publish")
     public ResponseEntity<String> publishHackathon(
-            @PathVariable UUID id,
+            @PathVariable Long id,
             Principal principal) {
         String email = principal.getName();
         hackathonService.publishHackathonResults(id, email);

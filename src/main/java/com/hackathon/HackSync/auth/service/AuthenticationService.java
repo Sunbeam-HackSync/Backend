@@ -70,7 +70,7 @@ public class AuthenticationService {
     }
 
     @Transactional
-    public String verifyOtp(VerifyOtpDto verifyOtpDto) {
+    public Users verifyOtp(VerifyOtpDto verifyOtpDto) {
         Users user = userRepository.findByEmail(verifyOtpDto.getEmail())
                 .orElseThrow(() -> new RuntimeException("user not found"));
 
@@ -90,7 +90,7 @@ public class AuthenticationService {
         user.setEmailVerified(true);
         userRepository.save(user);
 
-        return jwtService.generateToken(user);
+        return user;
     }
 
     @Transactional
@@ -115,7 +115,7 @@ public class AuthenticationService {
         sendVerificationEmail(user, newOtpCode);
     }
 
-    public String signIn(LoginRequestDto loginRequestDto) {
+    public Users signIn(LoginRequestDto loginRequestDto) {
         try {
 
             authenticationManager.authenticate(
@@ -132,7 +132,7 @@ public class AuthenticationService {
 
         Users user = userRepository.findByEmail(loginRequestDto.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        return jwtService.generateToken(user);
+        return user;
     }
 
     private String generateVerificationCode() {

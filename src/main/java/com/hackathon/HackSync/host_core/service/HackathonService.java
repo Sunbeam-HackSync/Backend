@@ -1,5 +1,7 @@
 package com.hackathon.HackSync.host_core.service;
 
+import java.util.UUID;
+
 import com.hackathon.HackSync.auth.entity.ROLE;
 import com.hackathon.HackSync.auth.entity.Users;
 import com.hackathon.HackSync.auth.repository.UserRepository;
@@ -28,7 +30,6 @@ import com.hackathon.HackSync.mentor_core.entity.MentorStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class HackathonService {
@@ -43,9 +44,9 @@ public class HackathonService {
     private final PasswordEncoder passwordEncoder;
 
     public HackathonService(HackathonRepository hackathonRepository, UserRepository userRepository,
-            TeamMemberRepository teamMemberRepository, ProjectSubmissionRepository projectSubmissionRepository,
-            HackathonJudgesRepository hackathonJudgesRepository, HackathonsMentorsRepository hackathonsMentorsRepository,
-            EmailService emailService, PasswordEncoder passwordEncoder) {
+                            TeamMemberRepository teamMemberRepository, ProjectSubmissionRepository projectSubmissionRepository,
+                            HackathonJudgesRepository hackathonJudgesRepository, HackathonsMentorsRepository hackathonsMentorsRepository,
+                            EmailService emailService, PasswordEncoder passwordEncoder) {
         this.hackathonRepository = hackathonRepository;
         this.userRepository = userRepository;
         this.teamMemberRepository = teamMemberRepository;
@@ -95,7 +96,7 @@ public class HackathonService {
                 .build();
     }
 
-    public Hackathons getHackathonById(UUID hackId, String authenticatedEmail) {
+    public Hackathons getHackathonById(Long hackId, String authenticatedEmail) {
         Users host = userRepository.findByEmail(authenticatedEmail)
                 .orElseThrow(() -> new RuntimeException("User does not exists"));
 
@@ -115,8 +116,8 @@ public class HackathonService {
         return hackathon;
     }
 
-    public HackathonResponse updateHackathon(UUID hackId, HackathonRequestDTO hackathonRequestDTO,
-            String authenticatedEmail) {
+    public HackathonResponse updateHackathon(Long hackId, HackathonRequestDTO hackathonRequestDTO,
+                                             String authenticatedEmail) {
         Users user = userRepository.findByEmail(authenticatedEmail)
                 .orElseThrow(() -> new RuntimeException("User does not exists"));
         Hackathons hackathon = hackathonRepository.findById(hackId)
@@ -193,7 +194,7 @@ public class HackathonService {
                 .build()).toList();
     }
 
-    public List<ParticipantResponseDTO> getHackathonParticipants(UUID hackId, String authenticatedEmail) {
+    public List<ParticipantResponseDTO> getHackathonParticipants(Long hackId, String authenticatedEmail) {
         Users user = userRepository.findByEmail(authenticatedEmail)
                 .orElseThrow(() -> new RuntimeException("User does not exists"));
         Hackathons hackathon = hackathonRepository.findById(hackId)
@@ -219,7 +220,7 @@ public class HackathonService {
                 .build()).toList();
     }
 
-    public List<ProjectSubmissionResponseDTO> getHackathonSubmissions(UUID hackId, String authenticatedEmail) {
+    public List<ProjectSubmissionResponseDTO> getHackathonSubmissions(Long hackId, String authenticatedEmail) {
         Users user = userRepository.findByEmail(authenticatedEmail)
                 .orElseThrow(() -> new RuntimeException("User does not exists"));
         Hackathons hackathon = hackathonRepository.findById(hackId)
@@ -270,7 +271,7 @@ public class HackathonService {
         }
     }
 
-    public void inviteJudge(UUID hackathonId, InviteRequestDTO inviteRequestDTO, String authenticatedEmail) {
+    public void inviteJudge(Long hackathonId, InviteRequestDTO inviteRequestDTO, String authenticatedEmail) {
         Users host = userRepository.findByEmail(authenticatedEmail).orElseThrow(() -> new RuntimeException("User does not exists"));
         Hackathons hackathon = hackathonRepository.findById(hackathonId).orElseThrow(() -> new RuntimeException("Hackathon does not exists"));
 
@@ -301,10 +302,11 @@ public class HackathonService {
         hackathonJudge.setAssignedAt(LocalDateTime.now());
         hackathonJudgesRepository.save(hackathonJudge);
 
+        //I have to send Email ROLE_JUDGE
         sendInvitationEmail(inviteRequestDTO.getEmail(), "Judge", hackathon.getTitle());
     }
 
-    public void inviteMentor(UUID hackathonId, InviteRequestDTO inviteRequestDTO, String authenticatedEmail) {
+    public void inviteMentor(Long hackathonId, InviteRequestDTO inviteRequestDTO, String authenticatedEmail) {
         Users host = userRepository.findByEmail(authenticatedEmail).orElseThrow(() -> new RuntimeException("User does not exists"));
         Hackathons hackathon = hackathonRepository.findById(hackathonId).orElseThrow(() -> new RuntimeException("Hackathon does not exists"));
 
@@ -334,10 +336,11 @@ public class HackathonService {
         hackathonMentor.setStatus(MentorStatus.INVITED);
         hackathonsMentorsRepository.save(hackathonMentor);
 
+        //I have to send Email to ROLE_MENTOR
         sendInvitationEmail(inviteRequestDTO.getEmail(), "Mentor", hackathon.getTitle());
     }
 
-    public void publishHackathonResults(UUID hackathonId, String authenticatedEmail) {
+    public void publishHackathonResults(Long hackathonId, String authenticatedEmail) {
         Users host = userRepository.findByEmail(authenticatedEmail)
                 .orElseThrow(() -> new RuntimeException("User does not exists"));
         Hackathons hackathon = hackathonRepository.findById(hackathonId)

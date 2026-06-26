@@ -4,7 +4,6 @@ import com.hackathon.HackSync.auth.entity.Users;
 import com.hackathon.HackSync.utils.entities.BaseClass;
 import jakarta.persistence.*;
 import lombok.*;
-import java.util.UUID;
 
 @Entity
 @AllArgsConstructor
@@ -25,7 +24,7 @@ public class PlatformReports extends BaseClass {
     private EntityType entityType;
 
     @Column(name = "entity_id")
-    private UUID entityId;
+    private Long entityId;
 
     private String reason;
 

@@ -5,19 +5,18 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Data
 @Builder
 public class ProjectSubmissionResponseDTO {
-    private UUID id;
+    private Long id;
     private String projectTitle;
     private String tagLine;
     private String description;
     private String githubRepoUrl;
     private String liveDemoUrl;
     private ProjectSubmissionStatus submissionStatus;
-    private UUID teamId;
+    private Long teamId;
     private String teamName;
     private LocalDateTime submittedAt;
 }

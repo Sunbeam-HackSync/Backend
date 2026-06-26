@@ -4,7 +4,6 @@ import com.hackathon.HackSync.auth.entity.Users;
 import com.hackathon.HackSync.utils.entities.BaseClass;
 import jakarta.persistence.*;
 import lombok.*;
-import java.util.UUID;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -27,7 +26,7 @@ public class PlatformAuditLogs extends BaseClass {
     private String targetEntity;
 
     @Column(name = "target_id")
-    private UUID targetId;
+    private Long targetId;
 
     @Column(name = "ip_address")
     private String ipAddress;
