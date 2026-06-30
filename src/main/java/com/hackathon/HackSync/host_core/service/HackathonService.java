@@ -10,6 +10,7 @@ import com.hackathon.HackSync.host_core.entity.HackathonStatus;
 import com.hackathon.HackSync.host_core.entity.Hackathons;
 import com.hackathon.HackSync.host_core.repository.HackathonRepository;
 import com.hackathon.HackSync.host_core.responses.HackathonResponse;
+import com.hackathon.HackSync.participants_core.dto.HackathonDetailResponseDTO;
 import org.springframework.stereotype.Service;
 
 import com.hackathon.HackSync.judge_core.dto.ProjectSubmissionResponseDTO;
@@ -93,7 +94,7 @@ public class HackathonService {
                 .build();
     }
 
-    public Hackathons getHackathonById(Long hackId, String authenticatedEmail) {
+    public HackathonDetailResponseDTO getHackathonById(Long hackId, String authenticatedEmail) {
         Users host = userRepository.findByEmail(authenticatedEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User does not exists"));
 
@@ -110,7 +111,21 @@ public class HackathonService {
             }
         }
 
-        return hackathon;
+        return HackathonDetailResponseDTO.builder()
+                .id(hackathon.getId())
+                .title(hackathon.getTitle())
+                .tagline(hackathon.getTagline())
+                .description(hackathon.getDescription())
+                .bannerImageUrl(hackathon.getBannerImageUrl())
+                .profileImageUrl(hackathon.getProfileImageUrl())
+                .minTeamSize(hackathon.getMinTeamSize())
+                .maxTeamSize(hackathon.getMaxTeamSize())
+                .registrationStart(hackathon.getRegistrationStart())
+                .registrationEnd(hackathon.getRegistrationEnd())
+                .hackathonStart(hackathon.getHackathonStart())
+                .hackathonEnd(hackathon.getHackathonEnd())
+                .hackathonStatus(hackathon.getHackathonStatus())
+                .build();
     }
 
     public HackathonResponse updateHackathon(Long hackId, HackathonRequestDTO hackathonRequestDTO,

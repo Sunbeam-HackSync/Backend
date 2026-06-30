@@ -8,12 +8,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-
+@Entity
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
-@ToString(callSuper = true, exclude = {"hackathonId", "teamId", "creatorId", "assignedMentorId"})
+@ToString(callSuper = true, exclude = { "hackathonId", "teamId", "creatorId", "assignedMentorId" })
 @Table(name = "help_tickets")
 public class HelpTickets extends BaseClass {
     @ManyToOne(fetch = FetchType.LAZY)

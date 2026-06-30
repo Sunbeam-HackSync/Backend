@@ -5,6 +5,7 @@ import com.hackathon.HackSync.host_core.dto.InviteRequestDTO;
 import com.hackathon.HackSync.host_core.entity.Hackathons;
 import com.hackathon.HackSync.host_core.responses.HackathonResponse;
 import com.hackathon.HackSync.host_core.service.HackathonService;
+import com.hackathon.HackSync.participants_core.dto.HackathonDetailResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,8 +39,8 @@ public class HackathonController {
     @GetMapping("/hackathon/{id}")
     public ResponseEntity<?> getHackathonById(@PathVariable Long id, Principal principal) {
         String email = principal.getName();
-        Hackathons hackathon = hackathonService.getHackathonById(id, email);
-        return new ResponseEntity<>(hackathon, HttpStatus.OK);
+        HackathonDetailResponseDTO detailResponseDTO= hackathonService.getHackathonById(id, email);
+        return new ResponseEntity<>(detailResponseDTO, HttpStatus.OK);
     }
 
     @PutMapping("/hackathon/{id}")
@@ -75,7 +76,7 @@ public class HackathonController {
         List<ProjectSubmissionResponseDTO> submissions = hackathonService.getHackathonSubmissions(id, email);
         return new ResponseEntity<>(submissions, HttpStatus.OK);
     }
-
+    
     @PostMapping("/hackathon/{id}/judges")
     public ResponseEntity<String> addJudge(@PathVariable Long id, Principal principal,
             @RequestBody InviteRequestDTO requestDTO) {
