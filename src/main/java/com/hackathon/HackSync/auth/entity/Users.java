@@ -32,6 +32,9 @@ public class Users extends BaseClass implements UserDetails {
     @Column(name = "is_email_verified", nullable = false)
     private boolean isEmailVerified = false;
 
+    @Column(name = "is_banned", nullable = false)
+    private boolean isBanned = false;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
@@ -54,7 +57,7 @@ public class Users extends BaseClass implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return !this.isBanned;
     }
 
     @Override

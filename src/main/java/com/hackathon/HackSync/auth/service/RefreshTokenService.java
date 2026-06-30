@@ -6,6 +6,11 @@ import com.hackathon.HackSync.auth.entity.RefreshToken;
 import com.hackathon.HackSync.auth.entity.Users;
 import com.hackathon.HackSync.auth.repository.RefreshTokenRepository;
 import com.hackathon.HackSync.auth.repository.UserRepository;
+import com.hackathon.HackSync.utils.exception.InvalidRefreshTokenException;
+import com.hackathon.HackSync.utils.exception.ResourceNotFoundException;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +19,7 @@ import java.time.Instant;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class RefreshTokenService {
 
     @Value("${security.jwt.refresh-token.expiration-time}")
@@ -22,15 +28,11 @@ public class RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
 
-    public RefreshTokenService(RefreshTokenRepository refreshTokenRepository, UserRepository userRepository) {
-        this.refreshTokenRepository = refreshTokenRepository;
-        this.userRepository = userRepository;
-    }
 
     @Transactional
     public RefreshToken createRefreshToken(Long userId) {
         Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         // Revoke all existing tokens for this user before creating a new one (Optional, based on requirement, but good for security)
         refreshTokenRepository.revokeAllUserTokens(user);
@@ -54,13 +56,13 @@ public class RefreshTokenService {
         if (token.isRevoked()) {
             // Token reuse detected! Revoke all tokens for this user.
             refreshTokenRepository.revokeAllUserTokens(token.getUser());
-            throw new RuntimeException("Refresh token was revoked. Please sign in again.");
+            throw new InvalidRefreshTokenException("Refresh token was revoked. Please sign in again.");
         }
         
         if (token.getExpiryDate().compareTo(Instant.now()) < 0) {
             token.setRevoked(true);
             refreshTokenRepository.save(token);
-            throw new RuntimeException("Refresh token was expired. Please make a new sign in request");
+            throw new InvalidRefreshTokenException("Refresh token was expired. Please make a new sign in request");
         }
         return token;
     }

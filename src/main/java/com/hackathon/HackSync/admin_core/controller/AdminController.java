@@ -1,11 +1,52 @@
 package com.hackathon.HackSync.admin_core.controller;
 
+import com.hackathon.HackSync.admin_core.service.AdminService;
+import com.hackathon.HackSync.admin_core.dto.PlatformMetricsDto;
+import com.hackathon.HackSync.auth.entity.Users;
+import com.hackathon.HackSync.host_core.entity.Hackathons;
+
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/admin")
+@RequiredArgsConstructor
+@RequestMapping("/admin")
 public class AdminController {
+
+    private final AdminService adminService;
+
+    @GetMapping("/hackathons/pending")
+    public ResponseEntity<?> getPendingHackathons() {
+        return ResponseEntity.ok(adminService.getPendingHackathons());
+    }
+
+    @PutMapping("/hackathons/{id}/approve")
+    public ResponseEntity<?> approveHackathon(@PathVariable Long id) {
+        return ResponseEntity.ok(adminService.approveHackathon(id));
+    }
+
+    @PutMapping("/hackathons/{id}/reject")
+    public ResponseEntity<?> rejectHackathon(@PathVariable Long id) {
+        return ResponseEntity.ok(adminService.rejectHackathon(id));
+    }
+
+    @GetMapping("/metrics")
+    public ResponseEntity<?> getPlatformMetrics() {
+        return ResponseEntity.ok(adminService.getPlatformMetrics());
+    }
+
+    @PutMapping("/users/{id}/ban")
+    public ResponseEntity<?> banUser(@PathVariable Long id) {
+        return ResponseEntity.ok(adminService.banUser(id));
+    }
+
     /*
      * GET /api/v1/admin/hackathons/pending - Retrieves the queue of all hackathons
      * waiting in PENDING_APPROVAL status.

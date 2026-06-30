@@ -1,12 +1,16 @@
 package com.hackathon.HackSync.host_core.repository;
 
 import com.hackathon.HackSync.host_core.entity.Hackathons;
+import com.hackathon.HackSync.host_core.entity.HackathonStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
-
+import org.springframework.stereotype.Repository;
 
 import com.hackathon.HackSync.auth.entity.Users;
 import java.util.List;
 
+@Repository
 public interface HackathonRepository extends JpaRepository<Hackathons, Long> {
     List<Hackathons> findByHostId(Users hostId);
+    List<Hackathons> findByHackathonStatus(HackathonStatus status);
+    long countByHackathonStatus(HackathonStatus status);
 }

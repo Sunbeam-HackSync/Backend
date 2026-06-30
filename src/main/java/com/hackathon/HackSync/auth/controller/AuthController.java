@@ -12,12 +12,15 @@ import com.hackathon.HackSync.auth.dto.ResendOtpDto;
 import com.hackathon.HackSync.auth.dto.VerifyOtpDto;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
     private final JWTService jwtService;
@@ -26,18 +29,6 @@ public class AuthController {
 
     @Value("${security.jwt.refresh-token.expiration-time}")
     private int refreshTokenDurationMs;
-
-    public AuthController(JWTService jwtService, AuthenticationService authenticationService,
-            RefreshTokenService refreshTokenService) {
-        this.jwtService = jwtService;
-        this.authenticationService = authenticationService;
-        this.refreshTokenService = refreshTokenService;
-    }
-
-    @GetMapping()
-    public String welcomeText() {
-        return "Welcome to the Authentication App";
-    }
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegistrationRequestDto registerUserDto) {

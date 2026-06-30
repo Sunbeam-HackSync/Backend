@@ -22,6 +22,7 @@ public class RefreshToken extends BaseClass {
     @Column(nullable = false)
     private Instant expiryDate;
 
+    @Builder.Default
     @Column(nullable = false)
     private boolean revoked = false;
 

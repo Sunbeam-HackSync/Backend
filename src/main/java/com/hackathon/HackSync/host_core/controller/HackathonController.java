@@ -14,15 +14,19 @@ import java.security.Principal;
 import com.hackathon.HackSync.judge_core.dto.ProjectSubmissionResponseDTO;
 import com.hackathon.HackSync.participants_core.dto.ParticipantResponseDTO;
 import java.util.List;
+import java.util.Map;
+
+import org.springframework.web.multipart.MultipartFile;
+import io.imagekit.models.files.FileUploadResponse;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/v1/host/hackathon")
+@RequestMapping("/host")
 public class HackathonController {
 
     private final HackathonService hackathonService;
 
-    @PostMapping("/create")
+    @PostMapping("/hackathon/create")
     public ResponseEntity<HackathonResponse> createHackathon(@RequestBody HackathonRequestDTO hackathon,
             Principal principal) {
         String email = principal.getName();
@@ -31,14 +35,14 @@ public class HackathonController {
         return new ResponseEntity<>(hackathonResponse, HttpStatus.CREATED);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/hackathon/{id}")
     public ResponseEntity<?> getHackathonById(@PathVariable Long id, Principal principal) {
         String email = principal.getName();
         Hackathons hackathon = hackathonService.getHackathonById(id, email);
         return new ResponseEntity<>(hackathon, HttpStatus.OK);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/hackathon/{id}")
     public ResponseEntity<HackathonResponse> updateHackathon(
             @PathVariable Long id,
             @RequestBody HackathonRequestDTO hackathonRequestDTO,
@@ -55,7 +59,7 @@ public class HackathonController {
         return new ResponseEntity<>(hackathons, HttpStatus.OK);
     }
 
-    @GetMapping("/{id}/participants")
+    @GetMapping("/hackathon/{id}/participants")
     public ResponseEntity<List<ParticipantResponseDTO>> getHackathonParticipants(
             @PathVariable Long id,
             Principal principal) {
@@ -64,7 +68,7 @@ public class HackathonController {
         return new ResponseEntity<>(participants, HttpStatus.OK);
     }
 
-    @GetMapping("/{id}/submissions")
+    @GetMapping("/hackathon/{id}/submissions")
     public ResponseEntity<List<ProjectSubmissionResponseDTO>> getHackathonSubmissions(@PathVariable Long id,
             Principal principal) {
         String email = principal.getName();
@@ -72,7 +76,7 @@ public class HackathonController {
         return new ResponseEntity<>(submissions, HttpStatus.OK);
     }
 
-    @PostMapping("/{id}/judges")
+    @PostMapping("/hackathon/{id}/judges")
     public ResponseEntity<String> addJudge(@PathVariable Long id, Principal principal,
             @RequestBody InviteRequestDTO requestDTO) {
         String email = principal.getName();
@@ -80,7 +84,7 @@ public class HackathonController {
         return new ResponseEntity<>("Judge added successfully", HttpStatus.OK);
     }
 
-    @PostMapping("/{id}/mentors")
+    @PostMapping("/hackathon/{id}/mentors")
     public ResponseEntity<String> addMentor(@PathVariable Long id, Principal principal,
             @RequestBody InviteRequestDTO requestDTO) {
         String email = principal.getName();
@@ -88,13 +92,19 @@ public class HackathonController {
         return new ResponseEntity<>("Mentor added successfully", HttpStatus.OK);
     }
 
-    @PutMapping("/{id}/publish")
+    @PutMapping("/hackathon/{id}/publish")
     public ResponseEntity<String> publishHackathon(
             @PathVariable Long id,
             Principal principal) {
         String email = principal.getName();
         hackathonService.publishHackathonResults(id, email);
         return new ResponseEntity<>("Hackathon results published successfully", HttpStatus.OK);
+    }
+
+    @PostMapping("/upload-image")
+    public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file) {
+        FileUploadResponse response = hackathonService.uploadImage(file);
+        return new ResponseEntity<>(Map.of("fileId", response.fileId(), "url", response.url()), HttpStatus.OK);
     }
 
 }
