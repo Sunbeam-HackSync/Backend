@@ -8,6 +8,8 @@ import org.springframework.stereotype.Repository;
 import com.hackathon.HackSync.auth.entity.Users;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -19,4 +21,8 @@ public interface HackathonRepository extends JpaRepository<Hackathons, Long> {
     long countByHackathonStatus(HackathonStatus status);
 
     Page<Hackathons> findByHackathonStatusIn(List<HackathonStatus> statuses, Pageable pageable);
+
+    List<Hackathons> findByHackathonStatusAndHackathonStartBefore(HackathonStatus status, LocalDateTime dateTime);
+
+    List<Hackathons> findByHackathonStatusAndHackathonEndBefore(HackathonStatus status, LocalDateTime dateTime);
 }

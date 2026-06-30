@@ -36,8 +36,9 @@ public class SecurityConfiguration {
                 // be shifter to ADMIN role
                 // implementing the ROLE based auth for different roles
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/admin/**","/actuator/**").hasRole("ADMIN")
+                        .requestMatchers("/auth/**", "/v3/api-docs", "/swagger-ui.html", "swagger-ui/index.html")
+                        .permitAll()
+                        .requestMatchers("/admin/**", "/actuator/**").hasRole("ADMIN")
                         .requestMatchers("/host/**").hasAnyRole("HOST", "ADMIN")
                         .requestMatchers("/judge/**").hasAnyRole("JUDGE", "ADMIN")
                         .requestMatchers("/mentor/**").hasAnyRole("MENTOR", "ADMIN")

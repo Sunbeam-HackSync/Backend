@@ -22,7 +22,6 @@ import com.hackathon.HackSync.participants_core.repository.TeamMemberRepository;
 import com.hackathon.HackSync.utils.exception.AccessDeniedException;
 import com.hackathon.HackSync.utils.exception.ResourceNotFoundException;
 import com.hackathon.HackSync.utils.service.ImageKitService;
-import com.twilio.rest.chat.v1.service.Role;
 
 import lombok.RequiredArgsConstructor;
 
@@ -107,7 +106,8 @@ public class HackathonService {
                     throw new AccessDeniedException("Access Denied: You are not the creator of this hackathon");
                 }
             } else {
-                throw new AccessDeniedException("Access Denied: Only HOSTs or ADMINs can view this hackathon details here");
+                throw new AccessDeniedException(
+                        "Access Denied: Only HOSTs or ADMINs can view this hackathon details here");
             }
         }
 
@@ -129,7 +129,7 @@ public class HackathonService {
     }
 
     public HackathonResponse updateHackathon(Long hackId, HackathonRequestDTO hackathonRequestDTO,
-                                             String authenticatedEmail) {
+            String authenticatedEmail) {
         Users user = userRepository.findByEmail(authenticatedEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User does not exists"));
         Hackathons hackathon = hackathonRepository.findById(hackId)
@@ -140,11 +140,13 @@ public class HackathonService {
                     throw new AccessDeniedException("Access Denied: You are not the creator of this hackathon");
                 }
             } else {
-                throw new AccessDeniedException("Access Denied: Participants, Judges, and Mentors cannot update hackathons");
+                throw new AccessDeniedException(
+                        "Access Denied: Participants, Judges, and Mentors cannot update hackathons");
             }
         }
         if (hackathon.getHackathonStatus() == HackathonStatus.COMPLETED) {
-            throw new RuntimeException("Cannot update a COMPLETED hackathon"); //did i need to create a seperate exception class for this
+            throw new RuntimeException("Cannot update a COMPLETED hackathon"); // did i need to create a seperate
+                                                                               // exception class for this
         }
 
         if (hackathonRequestDTO.getTitle() != null)
@@ -269,7 +271,7 @@ public class HackathonService {
                   <title>You're Invited</title>
                 </head>
                 <body style="margin:0;padding:0;background-color:#F7F7F5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
-                
+
                   <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background-color:#F7F7F5;min-height:100vh;">
                     <tr>
                       <td align="center" style="padding:48px 16px;">
@@ -279,15 +281,15 @@ public class HackathonService {
                           </tr>
                           <tr>
                             <td style="background-color:#FFFFFF;border-radius:0 0 6px 6px;padding:52px 52px 48px;">
-                
+
                               <p style="margin:0 0 40px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#A3A3A3;font-weight:500;">
                                 Hackathon Platform
                               </p>
-                
+
                               <h1 style="margin:0 0 12px;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#0A0A0A;line-height:1.25;letter-spacing:-0.01em;">
                                 You've been invited.
                               </h1>
-                
+
                               <p style="margin:0 0 36px;font-size:15px;color:#6B6B6B;line-height:1.7;">
                                 You've been selected as a <span style="color:#0A0A0A;font-weight:500;">{{role}}</span> for
                                 <span style="color:#0A0A0A;font-weight:500;">{{hackathonTitle}}</span>.
@@ -315,7 +317,7 @@ public class HackathonService {
                                   http://hackathon-platform.com/register?email={{email}}
                                 </span>
                               </p>
-                
+
                             </td>
                           </tr>
                           <tr>
@@ -326,12 +328,12 @@ public class HackathonService {
                               </p>
                             </td>
                           </tr>
-                
+
                         </table>
                       </td>
                     </tr>
                   </table>
-                
+
                 </body>
                 </html>
                 """;
@@ -342,13 +344,15 @@ public class HackathonService {
         try {
             emailService.sendVerificationEmail(email, subject, htmlMessage);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to send invitation email to " + e  + " "  + email);
+            throw new RuntimeException("Failed to send invitation email to " + e + " " + email);
         }
     }
 
     public void inviteJudge(Long hackathonId, InviteRequestDTO inviteRequestDTO, String authenticatedEmail) {
-        Users host = userRepository.findByEmail(authenticatedEmail).orElseThrow(() -> new ResourceNotFoundException("User does not exists"));
-        Hackathons hackathon = hackathonRepository.findById(hackathonId).orElseThrow(() -> new ResourceNotFoundException("Hackathon does not exists"));
+        Users host = userRepository.findByEmail(authenticatedEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User does not exists"));
+        Hackathons hackathon = hackathonRepository.findById(hackathonId)
+                .orElseThrow(() -> new ResourceNotFoundException("Hackathon does not exists"));
 
         if (!host.getRole().equals(ROLE.ADMIN)) {
             if (host.getRole().equals(ROLE.HOST)) {
@@ -377,13 +381,15 @@ public class HackathonService {
         hackathonJudge.setAssignedAt(LocalDateTime.now());
         hackathonJudgesRepository.save(hackathonJudge);
 
-        //I have to send Email ROLE_JUDGE
+        // I have to send Email ROLE_JUDGE
         sendInvitationEmail(inviteRequestDTO.getEmail(), ROLE.JUDGE.name(), hackathon.getTitle());
     }
 
     public void inviteMentor(Long hackathonId, InviteRequestDTO inviteRequestDTO, String authenticatedEmail) {
-        Users host = userRepository.findByEmail(authenticatedEmail).orElseThrow(() -> new ResourceNotFoundException("User does not exists"));
-        Hackathons hackathon = hackathonRepository.findById(hackathonId).orElseThrow(() -> new ResourceNotFoundException("Hackathon does not exists"));
+        Users host = userRepository.findByEmail(authenticatedEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User does not exists"));
+        Hackathons hackathon = hackathonRepository.findById(hackathonId)
+                .orElseThrow(() -> new ResourceNotFoundException("Hackathon does not exists"));
 
         if (!host.getRole().equals(ROLE.ADMIN)) {
             if (host.getRole().equals(ROLE.HOST)) {
@@ -411,7 +417,7 @@ public class HackathonService {
         hackathonMentor.setStatus(MentorStatus.INVITED);
         hackathonsMentorsRepository.save(hackathonMentor);
 
-        //I have to send Email to ROLE_MENTOR
+        // I have to send Email to ROLE_MENTOR
         sendInvitationEmail(inviteRequestDTO.getEmail(), ROLE.MENTOR.name(), hackathon.getTitle());
     }
 
@@ -430,7 +436,7 @@ public class HackathonService {
                 throw new AccessDeniedException("Access Denied: Only HOSTs or ADMINs can publish results");
             }
         }
-
+        // check hackathon approved status then publish it
         if (hackathon.getHackathonStatus() == HackathonStatus.COMPLETED) {
             throw new RuntimeException("Hackathon results are already published"); // HackathonException
         }

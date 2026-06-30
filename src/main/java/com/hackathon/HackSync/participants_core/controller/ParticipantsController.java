@@ -19,11 +19,8 @@ import org.springframework.data.domain.Page;
 @RequestMapping("/participants")
 public class ParticipantsController {
 
-
-
     private final ParticipantService participantService;
-    //create a seperate service
-    private final HelpTicketService helpTicketService  ;
+    private final HelpTicketService helpTicketService;
 
     @GetMapping("/hackathons")
     public ResponseEntity<Page<HackathonDetailResponseDTO>> getDiscoveryFeed(
@@ -34,7 +31,7 @@ public class ParticipantsController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<HackathonDetailResponseDTO> getHackathonById(@PathVariable Long id ) {
+    public ResponseEntity<HackathonDetailResponseDTO> getHackathonById(@PathVariable Long id) {
 
         HackathonDetailResponseDTO details = participantService.getPublicHackathonDetail(id);
         System.out.println(details);
@@ -43,9 +40,9 @@ public class ParticipantsController {
         return new ResponseEntity<>(details, HttpStatus.OK);
     }
 
-
     @PostMapping("/createTeam")
-    public ResponseEntity<TeamResponseDTO> createTeam(/*@Valid*/ @RequestBody TeamRequestDTO requestDTO, Principal principal) {
+    public ResponseEntity<TeamResponseDTO> createTeam(/* @Valid */ @RequestBody TeamRequestDTO requestDTO,
+            Principal principal) {
         System.out.println("===== CREATE TEAM CONTROLLER =====");
 
         TeamResponseDTO response = participantService.createTeam(requestDTO, principal.getName());
@@ -53,41 +50,41 @@ public class ParticipantsController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-
     @PostMapping("/helpTickets")
-    public ResponseEntity<HelpTicketResponseDTO> createTicket(@Valid @RequestBody HelpTicketRequestDTO request, Principal principal) {
+    public ResponseEntity<HelpTicketResponseDTO> createTicket(@Valid @RequestBody HelpTicketRequestDTO request,
+            Principal principal) {
 
         HelpTicketResponseDTO response = helpTicketService.createTicket(request, principal.getName());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-
-
-    
     @PostMapping("/teams/{id}/join")
-    public ResponseEntity<Void> addMember(@PathVariable("id") Long teamId, @RequestBody AddMemberRequestDTO request, Principal principal) {
+    public ResponseEntity<Void> addMember(@PathVariable("id") Long teamId, @RequestBody AddMemberRequestDTO request,
+            Principal principal) {
         // Logged-in team leader adds a participant by email
-        participantService.addMember(teamId, request.getEmail(), principal.getName());    
-        
+        participantService.addMember(teamId, request.getEmail(), principal.getName());
+
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-
-
-
-   
-
-
     /*
-    GET /participants/hackathons - Fetches a paginated list of all hackathons with the status ACTIVE or APPROVED for the discovery feed.
-    GET /participants/hackathons/{id} - Retrieves the detailed rules, timeline, and description of a specific hackathon.
-    POST /participants/teams - Creates a new team and automatically assigns the creator as the is_team_leader.
-    GET /participants/teams/looking - Fetches all teams within a hackathon where is_looking_for_members is TRUE to populate the matchmaking board.
-    POST /participants/teams/{id}/join - Adds the participant to the team_members mapping table.
-    PUT /participants/teams/{id} - Allows the team leader to update the skills_needed string or toggle their looking status.
-    POST /participants/tickets - Generates a new Help Ticket (Issue + Tech Stack) with an OPEN status.
-    POST /participants/submissions - Creates the final project record (Title, Description, GitHub link, Demo Video link) tied to the team.
+     * GET /participants/hackathons - Fetches a paginated list of all hackathons
+     * with the status ACTIVE or APPROVED for the discovery feed.
+     * GET /participants/hackathons/{id} - Retrieves the detailed rules, timeline,
+     * and description of a specific hackathon.
+     * POST /participants/createTeam - Creates a new team and automatically assigns
+     * the creator as the is_team_leader.
+     * POST /participants/helpTickets - Generates a new Help Ticket (Issue + Tech
+     * Stack) with an OPEN status.
+     * GET /participants/teams/looking - Fetches all teams within a hackathon where
+     * is_looking_for_members is TRUE to populate the matchmaking board.
+     * POST /participants/teams/{id}/join - Adds the participant to the team_members
+     * mapping table.
+     * PUT /participants/teams/{id} - Allows the team leader to update the
+     * skills_needed string or toggle their looking status.
+     * POST /participants/submissions - Creates the final project record (Title,
+     * Description, GitHub link, Demo Video link) tied to the team.
      */
 
 }
