@@ -16,6 +16,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -25,6 +27,7 @@ public class HelpTicketService {
     private final TeamRepository teamRepository;
     private final TeamMemberRepository teamMemberRepository;
     private final helpTicketRepository helpTicketRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
 
     public HelpTicketResponseDTO createTicket(@Valid HelpTicketRequestDTO request, String authenticatedEmail) {
@@ -65,6 +68,9 @@ public class HelpTicketService {
 
         // Save Ticket
         HelpTickets savedTicket = helpTicketRepository.save(ticket);
+
+        // Broadcast to Mentors that a new ticket is available
+        messagingTemplate.convertAndSend("/topic/tickets", "NEW_TICKET");
 
         // Build Response
         HelpTicketResponseDTO response = new HelpTicketResponseDTO();

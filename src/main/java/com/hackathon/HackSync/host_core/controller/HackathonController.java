@@ -76,7 +76,7 @@ public class HackathonController {
         List<ProjectSubmissionResponseDTO> submissions = hackathonService.getHackathonSubmissions(id, email);
         return new ResponseEntity<>(submissions, HttpStatus.OK);
     }
-    
+
     @PostMapping("/hackathon/{id}/judges")
     public ResponseEntity<String> addJudge(@PathVariable Long id, Principal principal,
             @RequestBody InviteRequestDTO requestDTO) {

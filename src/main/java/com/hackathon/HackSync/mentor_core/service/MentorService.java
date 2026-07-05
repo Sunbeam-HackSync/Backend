@@ -1,0 +1,106 @@
+package com.hackathon.HackSync.mentor_core.service;
+
+import com.hackathon.HackSync.auth.entity.Users;
+import com.hackathon.HackSync.auth.repository.UserRepository;
+import com.hackathon.HackSync.mentor_core.dto.MentorTicketResponseDTO;
+import com.hackathon.HackSync.mentor_core.entity.HelpTickets;
+import com.hackathon.HackSync.mentor_core.entity.TicketStatus;
+import com.hackathon.HackSync.mentor_core.repository.helpTicketRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class MentorService {
+
+    private final UserRepository userRepository;
+    private final helpTicketRepository helpTicketRepository;
+    private final SimpMessagingTemplate messagingTemplate;
+
+    public List<MentorTicketResponseDTO> getTicketsByStatus(String authenticatedEmail, String statusString) {
+        Users mentor = userRepository.findByEmail(authenticatedEmail)
+                .orElseThrow(() -> new RuntimeException("Mentor not found"));
+
+        TicketStatus status;
+        try {
+            status = TicketStatus.valueOf(statusString.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid ticket status");
+        }
+
+        List<HelpTickets> tickets;
+        if (status == TicketStatus.OPEN) {
+            tickets = helpTicketRepository.findByStatus(TicketStatus.OPEN);
+        } else {
+            tickets = helpTicketRepository.findByAssignedMentorIdAndStatus(mentor, status);
+        }
+
+        List<MentorTicketResponseDTO> responseList = new ArrayList<>();
+        for (HelpTickets ticket : tickets) {
+            responseList.add(mapToDTO(ticket));
+        }
+
+        return responseList;
+    }
+
+    public MentorTicketResponseDTO claimTicket(Long ticketId, String authenticatedEmail) {
+        Users mentor = userRepository.findByEmail(authenticatedEmail)
+                .orElseThrow(() -> new RuntimeException("Mentor not found"));
+
+        HelpTickets ticket = helpTicketRepository.findByIdForUpdate(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+
+        if (ticket.getStatus() != TicketStatus.OPEN) {
+            throw new RuntimeException("Ticket is already claimed or resolved");
+        }
+
+        ticket.setAssignedMentorId(mentor);
+        ticket.setStatus(TicketStatus.CLAIMED);
+        ticket.setClaimedAt(LocalDateTime.now());
+
+        helpTicketRepository.save(ticket);
+        messagingTemplate.convertAndSend("/topic/tickets", "TICKET_CLAIMED");
+        messagingTemplate.convertAndSend("/topic/team/" + ticket.getTeamId().getId() + "/tickets", "TICKET_CLAIMED");
+        return mapToDTO(ticket);
+    }
+
+    public MentorTicketResponseDTO resolveTicket(Long ticketId, String authenticatedEmail) {
+        Users mentor = userRepository.findByEmail(authenticatedEmail)
+                .orElseThrow(() -> new RuntimeException("Mentor not found"));
+
+        HelpTickets ticket = helpTicketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+
+        if (ticket.getAssignedMentorId() == null || !ticket.getAssignedMentorId().getId().equals(mentor.getId())) {
+            throw new RuntimeException("You are not the mentor assigned to this ticket");
+        }
+
+        ticket.setStatus(TicketStatus.RESOLVED);
+        ticket.setResolvedAt(LocalDateTime.now());
+
+        helpTicketRepository.save(ticket);
+        messagingTemplate.convertAndSend("/topic/team/" + ticket.getTeamId().getId() + "/tickets", "TICKET_RESOLVED");
+        return mapToDTO(ticket);
+    }
+
+    private MentorTicketResponseDTO mapToDTO(HelpTickets ticket) {
+        return MentorTicketResponseDTO.builder()
+                .id(ticket.getId())
+                .teamId(ticket.getTeamId() != null ? ticket.getTeamId().getId() : null)
+                .issueTitle(ticket.getIssueTitle())
+                .issueDescription(ticket.getIssueDescription())
+                .techTags(ticket.getTechTags())
+                .status(ticket.getStatus())
+                .claimedAt(ticket.getClaimedAt())
+                .resolvedAt(ticket.getResolvedAt())
+                .build();
+    }
+}

@@ -1,7 +1,11 @@
 package com.hackathon.HackSync.mentor_core.controller;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.hackathon.HackSync.mentor_core.dto.MentorTicketResponseDTO;
+import com.hackathon.HackSync.mentor_core.service.MentorService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.security.Principal;
+import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 
@@ -9,11 +13,43 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/mentor")
 public class MentorController {
+
+    private final MentorService mentorService;
+
+    @GetMapping("/tickets")
+    public ResponseEntity<List<MentorTicketResponseDTO>> getTicketsByStatus(
+            @RequestParam(defaultValue = "OPEN") String status,
+            Principal principal) {
+        List<MentorTicketResponseDTO> tickets = mentorService.getTicketsByStatus(principal.getName(), status);
+        return ResponseEntity.ok(tickets);
+    }
+
+    @PutMapping("/tickets/{id}/claim")
+    public ResponseEntity<MentorTicketResponseDTO> claimTicket(
+            @PathVariable Long id,
+            Principal principal) {
+        MentorTicketResponseDTO ticket = mentorService.claimTicket(id, principal.getName());
+        return ResponseEntity.ok(ticket);
+    }
+
+    @PutMapping("/tickets/{id}/resolve")
+    public ResponseEntity<MentorTicketResponseDTO> resolveTicket(
+            @PathVariable Long id,
+            Principal principal) {
+        MentorTicketResponseDTO ticket = mentorService.resolveTicket(id, principal.getName());
+        return ResponseEntity.ok(ticket);
+    }
+
     /*
-    GET /mentor/tickets/open - Queries the help_tickets table for all requests currently marked as OPEN.
-    PUT /mentor/tickets/{id}/claim - Updates the ticket by adding the mentor_id, pasting the manual Google Meet link, and changing the status to CLAIMED.
-    PUT /mentor/tickets/{id}/resolve - Updates the resolved_at timestamp and closes out the ticket once the mentor finishes the call.
-    GET /mentor/tickets/me - Fetches a history of all tickets claimed and resolved by this specific mentor.
+     * 
+     * 
+     * PUT /mentor/tickets/{id}/claim - Updates the ticket by adding the mentor_id,
+     * pasting the manual Google Meet link, and changing the status to CLAIMED.
+     * 
+     * PUT /mentor/tickets/{id}/resolve - Updates the resolved_at timestamp and
+     * closes out the ticket once the mentor finishes the call.
+     * 
+     * GET /mentor/tickets/me - Fetches a history of all tickets claimed and
+     * resolved by this specific mentor.
      */
 }
-
