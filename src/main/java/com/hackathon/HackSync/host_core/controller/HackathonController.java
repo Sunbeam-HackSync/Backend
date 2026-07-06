@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import com.hackathon.HackSync.judge_core.dto.ProjectSubmissionResponseDTO;
 import com.hackathon.HackSync.participants_core.dto.ParticipantResponseDTO;
+import com.hackathon.HackSync.participants_core.dto.TeamWithParticipantsResponseDTO;
+
 import java.util.List;
 import java.util.Map;
 
@@ -61,11 +63,11 @@ public class HackathonController {
     }
 
     @GetMapping("/hackathon/{id}/participants")
-    public ResponseEntity<List<ParticipantResponseDTO>> getHackathonParticipants(
+    public ResponseEntity<List<TeamWithParticipantsResponseDTO>> getHackathonParticipants(
             @PathVariable Long id,
             Principal principal) {
         String email = principal.getName();
-        List<ParticipantResponseDTO> participants = hackathonService.getHackathonParticipants(id, email);
+        List<TeamWithParticipantsResponseDTO> participants = hackathonService.getHackathonParticipants(id, email);
         return new ResponseEntity<>(participants, HttpStatus.OK);
     }
 

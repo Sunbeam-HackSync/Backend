@@ -36,7 +36,7 @@ public class SecurityConfiguration {
                 // be shifter to ADMIN role
                 // implementing the ROLE based auth for different roles
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/v3/api-docs", "/swagger-ui.html", "swagger-ui/index.html")
+                        .requestMatchers("/auth/**", "/v3/api-docs", "/swagger-ui.html", "swagger-ui/index.html", "/ws/**")
                         .permitAll()
                         .requestMatchers("/admin/**", "/actuator/**").hasRole("ADMIN")
                         .requestMatchers("/host/**").hasAnyRole("HOST", "ADMIN")
@@ -54,7 +54,7 @@ public class SecurityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfiguration() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.setAllowedOrigins(List.of("https://backend.com", "http://localhost:8080"));
+        corsConfiguration.setAllowedOrigins(List.of("http://localhost:8080", "http://localhost:5173"));
         corsConfiguration.setAllowedMethods(List.of("GET", "PUT", "POST", "DELETE"));
         corsConfiguration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
 

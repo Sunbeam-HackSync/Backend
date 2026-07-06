@@ -14,6 +14,8 @@ import com.hackathon.HackSync.participants_core.entity.Submissions;
 import com.hackathon.HackSync.participants_core.dto.TeamUpdateRequestDTO;
 import com.hackathon.HackSync.participants_core.dto.SubmissionRequestDTO;
 import com.hackathon.HackSync.participants_core.dto.SubmissionResponseDTO;
+import com.hackathon.HackSync.participants_core.dto.ParticipantResponseDTO;
+import com.hackathon.HackSync.participants_core.dto.TeamWithParticipantsResponseDTO;
 import com.hackathon.HackSync.participants_core.repository.SubmissionRepository;
 import com.hackathon.HackSync.participants_core.repository.TeamMemberRepository;
 import com.hackathon.HackSync.participants_core.repository.TeamRepository;
@@ -32,235 +34,291 @@ import org.springframework.data.domain.Pageable;
 @Transactional
 public class ParticipantService {
 
-    private final UserRepository userRepository;
-    private final HackathonRepository hackathonRepository;
-    private final TeamRepository teamRepository;
-    private final TeamMemberRepository teamMemberRepository;
-    private final SubmissionRepository submissionRepository;
+        private final UserRepository userRepository;
+        private final HackathonRepository hackathonRepository;
+        private final TeamRepository teamRepository;
+        private final TeamMemberRepository teamMemberRepository;
+        private final SubmissionRepository submissionRepository;
 
-    @Transactional
-    public void addMember(Long teamId,
-            String memberEmail,
-            String leaderEmail) {
+        @Transactional
+        public void addMember(Long teamId,
+                        String memberEmail,
+                        String leaderEmail) {
 
-        // Find team
-        Teams team = teamRepository.findById(teamId)
-                .orElseThrow(() -> new RuntimeException("Team not found"));
+                // Find team
+                Teams team = teamRepository.findById(teamId)
+                                .orElseThrow(() -> new RuntimeException("Team not found"));
 
-        // Logged-in user (leader)
-        Users leader = userRepository.findByEmail(leaderEmail)
-                .orElseThrow(() -> new RuntimeException("Leader not found"));
+                // Logged-in user (leader)
+                Users leader = userRepository.findByEmail(leaderEmail)
+                                .orElseThrow(() -> new RuntimeException("Leader not found"));
 
-        // Verify leader
-        TeamMembers leaderRecord = teamMemberRepository
-                .findByTeamsIdAndUserId(team, leader)
-                .orElseThrow(() -> new RuntimeException("You are not a member of this team"));
+                // Verify leader
+                TeamMembers leaderRecord = teamMemberRepository
+                                .findByTeamsIdAndUserId(team, leader)
+                                .orElseThrow(() -> new RuntimeException("You are not a member of this team"));
 
-        if (!leaderRecord.isTeamLeader()) {
-            throw new RuntimeException("Only the team leader can add members");
+                if (!leaderRecord.isTeamLeader()) {
+                        throw new RuntimeException("Only the team leader can add members");
+                }
+
+                // User to add
+                Users member = userRepository.findByEmail(memberEmail)
+                                .orElseThrow(() -> new RuntimeException("Participant not found"));
+
+                // Cannot add yourself
+                if (leader.getId().equals(member.getId())) {
+                        throw new RuntimeException("Leader is already a member of the team");
+                }
+
+                // Already in this team?
+                if (teamMemberRepository.existsByTeamsIdAndUserId(team, member)) {
+                        throw new RuntimeException("Participant already exists in this team");
+                }
+
+                // Already in another team of this hackathon?
+                if (teamMemberRepository.existsByTeamsIdHackathonIdIdAndUserIdId(team.getHackathonId().getId(),
+                                member.getId())) {
+                        throw new RuntimeException("Participant already belongs to another team in this hackathon");
+                }
+
+                // Add member
+                TeamMembers teamMember = new TeamMembers();
+                teamMember.setTeamsId(team);
+                teamMember.setUserId(member);
+                teamMember.setTeamLeader(false);
+                teamMember.setJoinedAt(LocalDateTime.now());
+
+                teamMemberRepository.save(teamMember);
         }
 
-        // User to add
-        Users member = userRepository.findByEmail(memberEmail)
-                .orElseThrow(() -> new RuntimeException("Participant not found"));
+        public Page<HackathonDetailResponseDTO> getDiscoveryFeed(int page, int size) {
+                Pageable pageable = PageRequest.of(page, size);
+                Page<Hackathons> hackathons = hackathonRepository.findByHackathonStatusIn(
+                                List.of(HackathonStatus.ACTIVE, HackathonStatus.APPROVED), pageable);
 
-        // Cannot add yourself
-        if (leader.getId().equals(member.getId())) {
-            throw new RuntimeException("Leader is already a member of the team");
+                return hackathons.map(hackathon -> HackathonDetailResponseDTO.builder()
+                                .id(hackathon.getId())
+                                .title(hackathon.getTitle())
+                                .tagline(hackathon.getTagline())
+                                .description(hackathon.getDescription())
+                                .bannerImageUrl(hackathon.getBannerImageUrl())
+                                .profileImageUrl(hackathon.getProfileImageUrl())
+                                .minTeamSize(hackathon.getMinTeamSize())
+                                .maxTeamSize(hackathon.getMaxTeamSize())
+                                .registrationStart(hackathon.getRegistrationStart())
+                                .registrationEnd(hackathon.getRegistrationEnd())
+                                .hackathonStart(hackathon.getHackathonStart())
+                                .hackathonEnd(hackathon.getHackathonEnd())
+                                .hackathonStatus(hackathon.getHackathonStatus())
+                                .build());
         }
 
-        // Already in this team?
-        if (teamMemberRepository.existsByTeamsIdAndUserId(team, member)) {
-            throw new RuntimeException("Participant already exists in this team");
+        public HackathonDetailResponseDTO getPublicHackathonDetail(Long id) {
+
+                Hackathons hackathon = hackathonRepository.findById(id)
+                                .orElseThrow(() -> new RuntimeException("Hackathon does not exists"));
+
+                if (hackathon.getHackathonStatus() == HackathonStatus.DRAFT) {
+                        throw new RuntimeException("Access Denied: Hackathon is not published yet");
+                }
+
+                return HackathonDetailResponseDTO.builder()
+                                .id(hackathon.getId())
+                                .title(hackathon.getTitle())
+                                .tagline(hackathon.getTagline())
+                                .description(hackathon.getDescription())
+                                .bannerImageUrl(hackathon.getBannerImageUrl())
+                                .profileImageUrl(hackathon.getProfileImageUrl())
+                                .minTeamSize(hackathon.getMinTeamSize())
+                                .maxTeamSize(hackathon.getMaxTeamSize())
+                                .registrationStart(hackathon.getRegistrationStart())
+                                .registrationEnd(hackathon.getRegistrationEnd())
+                                .hackathonStart(hackathon.getHackathonStart())
+                                .hackathonEnd(hackathon.getHackathonEnd())
+                                .hackathonStatus(hackathon.getHackathonStatus())
+                                .build();
         }
 
-        // Already in another team of this hackathon?
-        if (teamMemberRepository.existsByTeamsIdHackathonIdIdAndUserIdId(team.getHackathonId().getId(),
-                member.getId())) {
-            throw new RuntimeException("Participant already belongs to another team in this hackathon");
+        public List<HackathonDetailResponseDTO> getMyHackathons(String authenticatedEmail) {
+                List<Hackathons> participatedHackathons = teamMemberRepository
+                                .findParticipatedHackathonsByEmail(authenticatedEmail);
+
+                return participatedHackathons.stream()
+                                .map(hackathon -> HackathonDetailResponseDTO.builder()
+                                                .id(hackathon.getId())
+                                                .title(hackathon.getTitle())
+                                                .tagline(hackathon.getTagline())
+                                                .description(hackathon.getDescription())
+                                                .bannerImageUrl(hackathon.getBannerImageUrl())
+                                                .profileImageUrl(hackathon.getProfileImageUrl())
+                                                .minTeamSize(hackathon.getMinTeamSize())
+                                                .maxTeamSize(hackathon.getMaxTeamSize())
+                                                .registrationStart(hackathon.getRegistrationStart())
+                                                .registrationEnd(hackathon.getRegistrationEnd())
+                                                .hackathonStart(hackathon.getHackathonStart())
+                                                .hackathonEnd(hackathon.getHackathonEnd())
+                                                .hackathonStatus(hackathon.getHackathonStatus())
+                                                .build())
+                                .toList();
         }
 
-        // Add member
-        TeamMembers teamMember = new TeamMembers();
-        teamMember.setTeamsId(team);
-        teamMember.setUserId(member);
-        teamMember.setTeamLeader(false);
-        teamMember.setJoinedAt(LocalDateTime.now());
+        public TeamWithParticipantsResponseDTO seeMyTeamDetails(Long teamId, String authenticatedEmail) {
+                Users user = userRepository.findByEmail(authenticatedEmail)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        teamMemberRepository.save(teamMember);
-    }
+                Teams team = teamRepository.findById(teamId)
+                                .orElseThrow(() -> new RuntimeException("Team not found"));
 
-    public Page<HackathonDetailResponseDTO> getDiscoveryFeed(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Hackathons> hackathons = hackathonRepository.findByHackathonStatusIn(
-                List.of(HackathonStatus.ACTIVE, HackathonStatus.APPROVED), pageable);
+                // Verify user is in the team
+                boolean isMember = teamMemberRepository.existsByTeamsIdAndUserId(team, user);
+                if (!isMember) {
+                        throw new RuntimeException("You are not a member of this team");
+                }
 
-        return hackathons.map(hackathon -> HackathonDetailResponseDTO.builder()
-                .id(hackathon.getId())
-                .title(hackathon.getTitle())
-                .tagline(hackathon.getTagline())
-                .description(hackathon.getDescription())
-                .bannerImageUrl(hackathon.getBannerImageUrl())
-                .profileImageUrl(hackathon.getProfileImageUrl())
-                .minTeamSize(hackathon.getMinTeamSize())
-                .maxTeamSize(hackathon.getMaxTeamSize())
-                .registrationStart(hackathon.getRegistrationStart())
-                .registrationEnd(hackathon.getRegistrationEnd())
-                .hackathonStart(hackathon.getHackathonStart())
-                .hackathonEnd(hackathon.getHackathonEnd())
-                .hackathonStatus(hackathon.getHackathonStatus())
-                .build());
-    }
+                List<TeamMembers> members = teamMemberRepository.findByTeamsId(team);
 
-    public HackathonDetailResponseDTO getPublicHackathonDetail(Long id) {
+                List<ParticipantResponseDTO> participantDTOs = members.stream()
+                                .map(m -> ParticipantResponseDTO.builder()
+                                                .userId(m.getUserId().getId())
+                                                .email(m.getUserId().getEmail())
+                                                .teamId(m.getTeamsId().getId())
+                                                .teamName(m.getTeamsId().getTeamName())
+                                                .isTeamLeader(m.isTeamLeader())
+                                                .build())
+                                .toList();
 
-        Hackathons hackathon = hackathonRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Hackathon does not exists"));
-
-        if (hackathon.getHackathonStatus() == HackathonStatus.DRAFT) {
-            throw new RuntimeException("Access Denied: Hackathon is not published yet");
+                return TeamWithParticipantsResponseDTO.builder()
+                                .teamId(team.getId())
+                                .teamName(team.getTeamName())
+                                .participants(participantDTOs)
+                                .build();
         }
 
-        return HackathonDetailResponseDTO.builder()
-                .id(hackathon.getId())
-                .title(hackathon.getTitle())
-                .tagline(hackathon.getTagline())
-                .description(hackathon.getDescription())
-                .bannerImageUrl(hackathon.getBannerImageUrl())
-                .profileImageUrl(hackathon.getProfileImageUrl())
-                .minTeamSize(hackathon.getMinTeamSize())
-                .maxTeamSize(hackathon.getMaxTeamSize())
-                .registrationStart(hackathon.getRegistrationStart())
-                .registrationEnd(hackathon.getRegistrationEnd())
-                .hackathonStart(hackathon.getHackathonStart())
-                .hackathonEnd(hackathon.getHackathonEnd())
-                .hackathonStatus(hackathon.getHackathonStatus())
-                .build();
-    }
+        public TeamResponseDTO createTeam(TeamRequestDTO requestDTO, String authenticatedEmail) {
 
-    public TeamResponseDTO createTeam(TeamRequestDTO requestDTO, String authenticatedEmail) {
+                // Find logged-in user
+                Users user = userRepository.findByEmail(authenticatedEmail)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Find logged-in user
-        Users user = userRepository.findByEmail(authenticatedEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                // Find hackathon
+                Hackathons hackathon = hackathonRepository.findById(requestDTO.getHackathonId())
+                                .orElseThrow(() -> new RuntimeException("Hackathon not found"));
 
-        // Find hackathon
-        Hackathons hackathon = hackathonRepository.findById(requestDTO.getHackathonId())
-                .orElseThrow(() -> new RuntimeException("Hackathon not found"));
+                // Validate hackathon status
+                if (hackathon.getHackathonStatus() != HackathonStatus.ACTIVE
+                                && hackathon.getHackathonStatus() != HackathonStatus.PUBLISHED) {
 
-        // Validate hackathon status
-        if (hackathon.getHackathonStatus() != HackathonStatus.ACTIVE
-                && hackathon.getHackathonStatus() != HackathonStatus.PUBLISHED) {
+                        throw new RuntimeException("Teams can only be created for ACTIVE or PUBLISHED hackathons");
+                }
 
-            throw new RuntimeException("Teams can only be created for ACTIVE or PUBLISHED hackathons");
+                // Check if user already belongs to a team in this hackathon
+                boolean alreadyRegistered = teamMemberRepository.existsByTeamsIdHackathonIdIdAndUserIdId(
+                                hackathon.getId(),
+                                user.getId());
+
+                if (alreadyRegistered) {
+                        throw new RuntimeException("You are already registered in a team for this hackathon");
+                }
+
+                // Create Team
+                Teams team = new Teams();
+                team.setHackathonId(hackathon);
+                team.setTeamName(requestDTO.getTeamName());
+                team.setLookingForMembers(requestDTO.isLookingForMembers());
+                team.setSkillsNeeded(requestDTO.getSkillsNeeded());
+
+                Teams savedTeam = teamRepository.save(team);
+
+                // Add creator as team leader
+                TeamMembers leader = new TeamMembers();
+                leader.setTeamsId(savedTeam);
+                leader.setUserId(user);
+                leader.setTeamLeader(true);
+                leader.setJoinedAt(LocalDateTime.now());
+
+                teamMemberRepository.save(leader);
+
+                // Build response
+                TeamResponseDTO response = new TeamResponseDTO();
+                response.setTeamId(savedTeam.getId());
+                response.setHackathonId(hackathon.getId());
+                response.setTeamName(savedTeam.getTeamName());
+                response.setLookingForMembers(savedTeam.isLookingForMembers());
+                response.setSkillsNeeded(savedTeam.getSkillsNeeded());
+                response.setLeaderId(user.getId());
+
+                return response;
         }
 
-        // Check if user already belongs to a team in this hackathon
-        boolean alreadyRegistered = teamMemberRepository.existsByTeamsIdHackathonIdIdAndUserIdId(hackathon.getId(),
-                user.getId());
+        public TeamResponseDTO updateTeam(Long teamId, TeamUpdateRequestDTO requestDTO, String leaderEmail) {
+                Teams team = teamRepository.findById(teamId)
+                                .orElseThrow(() -> new RuntimeException("Team not found"));
 
-        if (alreadyRegistered) {
-            throw new RuntimeException("You are already registered in a team for this hackathon");
+                Users leader = userRepository.findByEmail(leaderEmail)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
+
+                TeamMembers leaderRecord = teamMemberRepository.findByTeamsIdAndUserId(team, leader)
+                                .orElseThrow(() -> new RuntimeException("You are not a member of this team"));
+
+                if (!leaderRecord.isTeamLeader()) {
+                        throw new RuntimeException("Only the team leader can update team details");
+                }
+
+                if (requestDTO.getIsLookingForMembers() != null) {
+                        team.setLookingForMembers(requestDTO.getIsLookingForMembers());
+                }
+
+                if (requestDTO.getSkillsNeeded() != null) {
+                        team.setSkillsNeeded(requestDTO.getSkillsNeeded());
+                }
+
+                Teams updatedTeam = teamRepository.save(team);
+
+                return TeamResponseDTO.builder()
+                                .teamId(updatedTeam.getId())
+                                .hackathonId(updatedTeam.getHackathonId().getId())
+                                .teamName(updatedTeam.getTeamName())
+                                .isLookingForMembers(updatedTeam.isLookingForMembers())
+                                .skillsNeeded(updatedTeam.getSkillsNeeded())
+                                .leaderId(leader.getId())
+                                .build();
         }
 
-        // Create Team
-        Teams team = new Teams();
-        team.setHackathonId(hackathon);
-        team.setTeamName(requestDTO.getTeamName());
-        team.setLookingForMembers(requestDTO.isLookingForMembers());
-        team.setSkillsNeeded(requestDTO.getSkillsNeeded());
+        public SubmissionResponseDTO createSubmission(SubmissionRequestDTO requestDTO, String authenticatedEmail) {
+                // Find logged-in user
+                Users user = userRepository.findByEmail(authenticatedEmail)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Teams savedTeam = teamRepository.save(team);
+                // Find team
+                Teams team = teamRepository.findById(requestDTO.getTeamId())
+                                .orElseThrow(() -> new RuntimeException("Team not found"));
 
-        // Add creator as team leader
-        TeamMembers leader = new TeamMembers();
-        leader.setTeamsId(savedTeam);
-        leader.setUserId(user);
-        leader.setTeamLeader(true);
-        leader.setJoinedAt(LocalDateTime.now());
+                // Verify user is in the team
+                TeamMembers memberRecord = teamMemberRepository.findByTeamsIdAndUserId(team, user)
+                                .orElseThrow(() -> new RuntimeException("You are not a member of this team"));
 
-        teamMemberRepository.save(leader);
+                // Check if submission already exists
+                if (submissionRepository.existsByTeamId(team.getId())) {
+                        throw new RuntimeException("Team already has a submission");
+                }
 
-        // Build response
-        TeamResponseDTO response = new TeamResponseDTO();
-        response.setTeamId(savedTeam.getId());
-        response.setHackathonId(hackathon.getId());
-        response.setTeamName(savedTeam.getTeamName());
-        response.setLookingForMembers(savedTeam.isLookingForMembers());
-        response.setSkillsNeeded(savedTeam.getSkillsNeeded());
-        response.setLeaderId(user.getId());
+                Submissions submission = new Submissions();
+                submission.setTeam(team);
+                submission.setTitle(requestDTO.getTitle());
+                submission.setDescription(requestDTO.getDescription());
+                submission.setGithubLink(requestDTO.getGithubLink());
+                submission.setDemoVideoLink(requestDTO.getDemoVideoLink());
 
-        return response;
-    }
+                Submissions savedSubmission = submissionRepository.save(submission);
 
-    public TeamResponseDTO updateTeam(Long teamId, TeamUpdateRequestDTO requestDTO, String leaderEmail) {
-        Teams team = teamRepository.findById(teamId)
-                .orElseThrow(() -> new RuntimeException("Team not found"));
-
-        Users leader = userRepository.findByEmail(leaderEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        TeamMembers leaderRecord = teamMemberRepository.findByTeamsIdAndUserId(team, leader)
-                .orElseThrow(() -> new RuntimeException("You are not a member of this team"));
-
-        if (!leaderRecord.isTeamLeader()) {
-            throw new RuntimeException("Only the team leader can update team details");
+                return SubmissionResponseDTO.builder()
+                                .submissionId(savedSubmission.getId())
+                                .teamId(team.getId())
+                                .title(savedSubmission.getTitle())
+                                .description(savedSubmission.getDescription())
+                                .githubLink(savedSubmission.getGithubLink())
+                                .demoVideoLink(savedSubmission.getDemoVideoLink())
+                                .build();
         }
-
-        if (requestDTO.getIsLookingForMembers() != null) {
-            team.setLookingForMembers(requestDTO.getIsLookingForMembers());
-        }
-        
-        if (requestDTO.getSkillsNeeded() != null) {
-            team.setSkillsNeeded(requestDTO.getSkillsNeeded());
-        }
-
-        Teams updatedTeam = teamRepository.save(team);
-
-        return TeamResponseDTO.builder()
-                .teamId(updatedTeam.getId())
-                .hackathonId(updatedTeam.getHackathonId().getId())
-                .teamName(updatedTeam.getTeamName())
-                .isLookingForMembers(updatedTeam.isLookingForMembers())
-                .skillsNeeded(updatedTeam.getSkillsNeeded())
-                .leaderId(leader.getId())
-                .build();
-    }
-
-    public SubmissionResponseDTO createSubmission(SubmissionRequestDTO requestDTO, String authenticatedEmail) {
-        // Find logged-in user
-        Users user = userRepository.findByEmail(authenticatedEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // Find team
-        Teams team = teamRepository.findById(requestDTO.getTeamId())
-                .orElseThrow(() -> new RuntimeException("Team not found"));
-
-        // Verify user is in the team
-        TeamMembers memberRecord = teamMemberRepository.findByTeamsIdAndUserId(team, user)
-                .orElseThrow(() -> new RuntimeException("You are not a member of this team"));
-
-        // Check if submission already exists
-        if (submissionRepository.existsByTeamId(team.getId())) {
-            throw new RuntimeException("Team already has a submission");
-        }
-
-        Submissions submission = new Submissions();
-        submission.setTeam(team);
-        submission.setTitle(requestDTO.getTitle());
-        submission.setDescription(requestDTO.getDescription());
-        submission.setGithubLink(requestDTO.getGithubLink());
-        submission.setDemoVideoLink(requestDTO.getDemoVideoLink());
-
-        Submissions savedSubmission = submissionRepository.save(submission);
-
-        return SubmissionResponseDTO.builder()
-                .submissionId(savedSubmission.getId())
-                .teamId(team.getId())
-                .title(savedSubmission.getTitle())
-                .description(savedSubmission.getDescription())
-                .githubLink(savedSubmission.getGithubLink())
-                .demoVideoLink(savedSubmission.getDemoVideoLink())
-                .build();
-    }
 }

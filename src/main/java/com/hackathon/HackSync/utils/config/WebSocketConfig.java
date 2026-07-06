@@ -1,4 +1,4 @@
-package com.hackathon.HackSync.config;
+package com.hackathon.HackSync.utils.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;

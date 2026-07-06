@@ -8,6 +8,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -36,7 +37,7 @@ public class HelpTickets extends BaseClass {
     private String issueTitle;
 
     @Column(name = "issue_description", columnDefinition = "TEXT")
-    private String issueDescription;
+    private String issueDescription;    
 
     @Column(name = "tech_tags", length = 100)
     private String techTags;

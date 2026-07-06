@@ -29,14 +29,15 @@ public class HelpTicketService {
     private final helpTicketRepository helpTicketRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
-
     public HelpTicketResponseDTO createTicket(@Valid HelpTicketRequestDTO request, String authenticatedEmail) {
 
         // Find logged-in participant
-        Users user = userRepository.findByEmail(authenticatedEmail).orElseThrow(() -> new RuntimeException("User not found"));
+        Users user = userRepository.findByEmail(authenticatedEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         // Find Team
-        Teams team = teamRepository.findById(request.getTeamId()).orElseThrow(() -> new RuntimeException("Team not found"));
+        Teams team = teamRepository.findById(request.getTeamId())
+                .orElseThrow(() -> new RuntimeException("Team not found"));
 
         // Check whether participant belongs to this team
         boolean isMember = teamMemberRepository.existsByTeamsIdIdAndUserIdId(team.getId(), user.getId());
@@ -69,17 +70,17 @@ public class HelpTicketService {
         // Save Ticket
         HelpTickets savedTicket = helpTicketRepository.save(ticket);
 
-        // Broadcast to Mentors that a new ticket is available
-        messagingTemplate.convertAndSend("/topic/tickets", "NEW_TICKET");
-
         // Build Response
         HelpTicketResponseDTO response = new HelpTicketResponseDTO();
 
-
+        response.setTicketId(savedTicket.getId());
         response.setIssueTitle(savedTicket.getIssueTitle());
         response.setIssueDescription(savedTicket.getIssueDescription());
         response.setTechTags(savedTicket.getTechTags());
         response.setStatus(savedTicket.getStatus());
+
+        // Broadcast to Mentors that a new ticket is available
+        messagingTemplate.convertAndSend("/topic/tickets", response);
 
         return response;
     }

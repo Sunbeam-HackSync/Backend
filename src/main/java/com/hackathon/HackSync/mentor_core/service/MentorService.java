@@ -6,6 +6,8 @@ import com.hackathon.HackSync.mentor_core.dto.MentorTicketResponseDTO;
 import com.hackathon.HackSync.mentor_core.entity.HelpTickets;
 import com.hackathon.HackSync.mentor_core.entity.TicketStatus;
 import com.hackathon.HackSync.mentor_core.repository.helpTicketRepository;
+import com.hackathon.HackSync.utils.exception.ResourceNotFoundException;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,13 +29,14 @@ public class MentorService {
 
     public List<MentorTicketResponseDTO> getTicketsByStatus(String authenticatedEmail, String statusString) {
         Users mentor = userRepository.findByEmail(authenticatedEmail)
-                .orElseThrow(() -> new RuntimeException("Mentor not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Mentor not found"));
 
+        //TODO add this exception class in global exception controller
         TicketStatus status;
         try {
             status = TicketStatus.valueOf(statusString.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Invalid ticket status");
+            throw new IllegalArgumentException("Invalid ticket status");
         }
 
         List<HelpTickets> tickets;
@@ -53,11 +56,12 @@ public class MentorService {
 
     public MentorTicketResponseDTO claimTicket(Long ticketId, String authenticatedEmail) {
         Users mentor = userRepository.findByEmail(authenticatedEmail)
-                .orElseThrow(() -> new RuntimeException("Mentor not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Mentor not found"));
 
         HelpTickets ticket = helpTicketRepository.findByIdForUpdate(ticketId)
-                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found"));
 
+        //TODO throw ticket invalid exception
         if (ticket.getStatus() != TicketStatus.OPEN) {
             throw new RuntimeException("Ticket is already claimed or resolved");
         }
@@ -74,12 +78,13 @@ public class MentorService {
 
     public MentorTicketResponseDTO resolveTicket(Long ticketId, String authenticatedEmail) {
         Users mentor = userRepository.findByEmail(authenticatedEmail)
-                .orElseThrow(() -> new RuntimeException("Mentor not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Mentor not found"));
 
         HelpTickets ticket = helpTicketRepository.findById(ticketId)
-                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found"));
 
         if (ticket.getAssignedMentorId() == null || !ticket.getAssignedMentorId().getId().equals(mentor.getId())) {
+            //TODO throw not authorized exception
             throw new RuntimeException("You are not the mentor assigned to this ticket");
         }
 

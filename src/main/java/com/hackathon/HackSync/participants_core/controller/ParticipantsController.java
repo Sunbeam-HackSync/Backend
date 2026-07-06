@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 
 import java.security.Principal;
+import java.util.List;
 import org.springframework.data.domain.Page;
 
 @RequiredArgsConstructor
@@ -34,16 +35,19 @@ public class ParticipantsController {
     public ResponseEntity<HackathonDetailResponseDTO> getHackathonById(@PathVariable Long id) {
 
         HackathonDetailResponseDTO details = participantService.getPublicHackathonDetail(id);
-        System.out.println(details);
-        System.out.println("hii");
 
         return new ResponseEntity<>(details, HttpStatus.OK);
+    }
+
+    @GetMapping("/my-hackathons")
+    public ResponseEntity<List<HackathonDetailResponseDTO>> getMyHackathons(Principal principal) {
+        List<HackathonDetailResponseDTO> hackathons = participantService.getMyHackathons(principal.getName());
+        return new ResponseEntity<>(hackathons, HttpStatus.OK);
     }
 
     @PostMapping("/createTeam")
     public ResponseEntity<TeamResponseDTO> createTeam(/* @Valid */ @RequestBody TeamRequestDTO requestDTO,
             Principal principal) {
-        System.out.println("===== CREATE TEAM CONTROLLER =====");
 
         TeamResponseDTO response = participantService.createTeam(requestDTO, principal.getName());
 
@@ -79,6 +83,12 @@ public class ParticipantsController {
     public ResponseEntity<TeamResponseDTO> updateTeam(@PathVariable("id") Long teamId,
             @RequestBody TeamUpdateRequestDTO request, Principal principal) {
         TeamResponseDTO response = participantService.updateTeam(teamId, request, principal.getName());
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/teams/{id}")
+    public ResponseEntity<TeamWithParticipantsResponseDTO> seeMyTeamDetails(@PathVariable("id") Long teamId, Principal principal) {
+        TeamWithParticipantsResponseDTO response = participantService.seeMyTeamDetails(teamId, principal.getName());
         return ResponseEntity.ok(response);
     }
 
