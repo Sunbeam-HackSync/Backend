@@ -2,6 +2,8 @@ package com.hackathon.HackSync.auth.controller;
 
 import com.hackathon.HackSync.auth.entity.Users;
 import com.hackathon.HackSync.auth.service.UserService;
+import com.hackathon.HackSync.utils.dto.ApiResponse;
+import com.hackathon.HackSync.utils.dto.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -29,18 +31,20 @@ public class UserController {
     public ResponseEntity<?> authenticateUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse("Unauthorized", HttpStatus.UNAUTHORIZED));
         }
         Object principal = authentication.getPrincipal();
         if (principal instanceof Users users) {
             return ResponseEntity.ok(
-                    Map.of(
-                            "username", users.getUsername(),
-                            "roles", users.getAuthorities()
+                    new ApiResponse<>("Profile fetched successfully", HttpStatus.OK,
+                            Map.of(
+                                    "username", users.getUsername(),
+                                    "roles", users.getAuthorities()
+                            )
                     )
             );
         }
-        return ResponseEntity.badRequest().body("Unexpected principal type");
+        return ResponseEntity.badRequest().body(new ErrorResponse("Unexpected principal type", HttpStatus.BAD_REQUEST));
     }
 
 }

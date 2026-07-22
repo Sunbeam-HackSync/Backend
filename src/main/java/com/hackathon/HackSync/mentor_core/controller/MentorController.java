@@ -8,6 +8,8 @@ import java.security.Principal;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
+import com.hackathon.HackSync.utils.dto.ApiResponse;
+import org.springframework.http.HttpStatus;
 
 @RequiredArgsConstructor
 @RestController
@@ -17,27 +19,27 @@ public class MentorController {
     private final MentorService mentorService;
 
     @GetMapping("/tickets")
-    public ResponseEntity<List<MentorTicketResponseDTO>> getTicketsByStatus(
+    public ResponseEntity<ApiResponse<List<MentorTicketResponseDTO>>> getTicketsByStatus(
             @RequestParam(defaultValue = "OPEN") String status,
             Principal principal) {
         List<MentorTicketResponseDTO> tickets = mentorService.getTicketsByStatus(principal.getName(), status);
-        return ResponseEntity.ok(tickets);
+        return ResponseEntity.ok(new ApiResponse<>("Tickets fetched successfully", HttpStatus.OK, tickets));
     }
 
     @PutMapping("/tickets/{id}/claim")
-    public ResponseEntity<MentorTicketResponseDTO> claimTicket(
+    public ResponseEntity<ApiResponse<MentorTicketResponseDTO>> claimTicket(
             @PathVariable Long id,
             Principal principal) {
         MentorTicketResponseDTO ticket = mentorService.claimTicket(id, principal.getName());
-        return ResponseEntity.ok(ticket);
+        return ResponseEntity.ok(new ApiResponse<>("Ticket claimed successfully", HttpStatus.OK, ticket));
     }
 
     @PutMapping("/tickets/{id}/resolve")
-    public ResponseEntity<MentorTicketResponseDTO> resolveTicket(
+    public ResponseEntity<ApiResponse<MentorTicketResponseDTO>> resolveTicket(
             @PathVariable Long id,
             Principal principal) {
         MentorTicketResponseDTO ticket = mentorService.resolveTicket(id, principal.getName());
-        return ResponseEntity.ok(ticket);
+        return ResponseEntity.ok(new ApiResponse<>("Ticket resolved successfully", HttpStatus.OK, ticket));
     }
 
     /*
