@@ -7,6 +7,8 @@ import com.hackathon.HackSync.mentor_core.entity.HelpTickets;
 import com.hackathon.HackSync.mentor_core.entity.TicketStatus;
 import com.hackathon.HackSync.mentor_core.repository.helpTicketRepository;
 import com.hackathon.HackSync.utils.exception.ResourceNotFoundException;
+import com.hackathon.HackSync.mentor_core.dto.MeetingRequestDTO;
+import com.hackathon.HackSync.mentor_core.dto.MeetingResponseDTO;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 @Service
 @RequiredArgsConstructor
@@ -26,10 +29,11 @@ public class MentorService {
     private final UserRepository userRepository;
     private final helpTicketRepository helpTicketRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final MeetingService meetingService;
 
     public List<MentorTicketResponseDTO> getTicketsByStatus(String authenticatedEmail, String statusString) {
         Users mentor = userRepository.findByEmail(authenticatedEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("Mentor not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("Mentor not found"));
 
         //TODO add this exception class in global exception controller
         TicketStatus status;
@@ -66,22 +70,28 @@ public class MentorService {
             throw new RuntimeException("Ticket is already claimed or resolved");
         }
 
+        // Generate JaaS Meeting
+        MeetingRequestDTO requestDto = new MeetingRequestDTO(ticket.getIssueTitle());
+        MeetingResponseDTO meetingResponse = meetingService.generateSecureMeeting(requestDto);
+
         ticket.setAssignedMentorId(mentor);
         ticket.setStatus(TicketStatus.CLAIMED);
         ticket.setClaimedAt(LocalDateTime.now());
+        ticket.setParticipantMeetingLink(meetingResponse.getParticipantLink());
+        ticket.setMentorMeetingLink(meetingResponse.getMentorLink());
 
         helpTicketRepository.save(ticket);
-        messagingTemplate.convertAndSend("/topic/tickets", "TICKET_CLAIMED");
-        messagingTemplate.convertAndSend("/topic/team/" + ticket.getTeamId().getId() + "/tickets", "TICKET_CLAIMED");
+        messagingTemplate.convertAndSend("/topic/tickets", /*"TICKET_CLAIMED"*/ TicketStatus.CLAIMED);
+        messagingTemplate.convertAndSend("/topic/team/" + ticket.getTeamId().getId() + "/tickets", /*"TICKET_CLAIMED"*/ TicketStatus.CLAIMED);
         return mapToDTO(ticket);
     }
 
     public MentorTicketResponseDTO resolveTicket(Long ticketId, String authenticatedEmail) {
         Users mentor = userRepository.findByEmail(authenticatedEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("Mentor not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("Mentor not found"));
 
         HelpTickets ticket = helpTicketRepository.findById(ticketId)
-                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("Ticket not found"));
 
         if (ticket.getAssignedMentorId() == null || !ticket.getAssignedMentorId().getId().equals(mentor.getId())) {
             //TODO throw not authorized exception
@@ -92,7 +102,7 @@ public class MentorService {
         ticket.setResolvedAt(LocalDateTime.now());
 
         helpTicketRepository.save(ticket);
-        messagingTemplate.convertAndSend("/topic/team/" + ticket.getTeamId().getId() + "/tickets", "TICKET_RESOLVED");
+        messagingTemplate.convertAndSend("/topic/team/" + ticket.getTeamId().getId() + "/tickets", /*"TICKET_RESOLVED"*/ TicketStatus.RESOLVED);
         return mapToDTO(ticket);
     }
 
@@ -103,6 +113,9 @@ public class MentorService {
                 .issueTitle(ticket.getIssueTitle())
                 .issueDescription(ticket.getIssueDescription())
                 .techTags(ticket.getTechTags())
+                .contactLocation(ticket.getContactLocation())
+                .participantMeetingLink(ticket.getParticipantMeetingLink())
+                .mentorMeetingLink(ticket.getMentorMeetingLink())
                 .status(ticket.getStatus())
                 .claimedAt(ticket.getClaimedAt())
                 .resolvedAt(ticket.getResolvedAt())

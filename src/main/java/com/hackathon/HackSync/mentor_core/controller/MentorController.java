@@ -1,6 +1,9 @@
 package com.hackathon.HackSync.mentor_core.controller;
 
+import com.hackathon.HackSync.mentor_core.dto.MeetingRequestDTO;
+import com.hackathon.HackSync.mentor_core.dto.MeetingResponseDTO;
 import com.hackathon.HackSync.mentor_core.dto.MentorTicketResponseDTO;
+import com.hackathon.HackSync.mentor_core.service.MeetingService;
 import com.hackathon.HackSync.mentor_core.service.MentorService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +20,7 @@ import org.springframework.http.HttpStatus;
 public class MentorController {
 
     private final MentorService mentorService;
+    private final MeetingService meetingService;
 
     @GetMapping("/tickets")
     public ResponseEntity<ApiResponse<List<MentorTicketResponseDTO>>> getTicketsByStatus(
@@ -24,6 +28,13 @@ public class MentorController {
             Principal principal) {
         List<MentorTicketResponseDTO> tickets = mentorService.getTicketsByStatus(principal.getName(), status);
         return ResponseEntity.ok(new ApiResponse<>("Tickets fetched successfully", HttpStatus.OK, tickets));
+    }
+
+    @PostMapping("/generate")
+    public ResponseEntity<ApiResponse<MeetingResponseDTO>> generateMeetingLinks(
+            @RequestBody MeetingRequestDTO request) {
+        MeetingResponseDTO meetingResponse = meetingService.generateSecureMeeting(request);
+        return ResponseEntity.ok(new ApiResponse<>("Meeting links generated successfully", HttpStatus.CREATED, meetingResponse));
     }
 
     @PutMapping("/tickets/{id}/claim")

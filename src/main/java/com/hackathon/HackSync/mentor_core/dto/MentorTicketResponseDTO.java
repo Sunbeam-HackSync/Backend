@@ -17,7 +17,8 @@ public class MentorTicketResponseDTO {
     private String issueDescription;
     private String techTags;
     private String contactLocation;
-    private String meetingLink;
+    private String participantMeetingLink;
+    private String mentorMeetingLink;
     private TicketStatus status;
     private LocalDateTime claimedAt;
     private LocalDateTime resolvedAt;
