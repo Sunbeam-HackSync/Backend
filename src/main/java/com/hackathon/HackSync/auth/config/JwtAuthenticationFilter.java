@@ -1,6 +1,7 @@
 package com.hackathon.HackSync.auth.config;
 
 import com.hackathon.HackSync.auth.service.JWTService;
+import com.hackathon.HackSync.auth.service.UserService;
 
 import java.io.IOException;
 
@@ -25,13 +26,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JWTService jwtService;
 
-    private final UserDetailsService userDetailsService;
+    private final UserService userService;
 
     public JwtAuthenticationFilter(HandlerExceptionResolver handlerExceptionResolver, JWTService jwtService,
-            UserDetailsService userDetailsService) {
+            UserService userService) {
         this.handlerExceptionResolver = handlerExceptionResolver;
         this.jwtService = jwtService;
-        this.userDetailsService = userDetailsService;
+        this.userService  = userService;
     }
 
     @Override
@@ -53,12 +54,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
             if (userEmail != null && authentication == null) {
-                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+                UserDetails userDetails = this.userService.loadUserByUsername(userEmail);
 
                 if (jwtService.isTokenValid(jwt, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,
                             null, userDetails.getAuthorities());
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    // this is for seeting the user IP address for auditing and logging
+                    // authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }

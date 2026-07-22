@@ -1,5 +1,6 @@
 package com.hackathon.HackSync.auth.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hackathon.HackSync.utils.entities.BaseClass;
 import jakarta.persistence.*;
 import lombok.*;
@@ -40,26 +41,31 @@ public class Users extends BaseClass implements UserDetails {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
+    @JsonIgnore
     @Override
     public String getPassword() {
         return this.password_hash;
     }
 
+    @JsonIgnore
     @Override
     public String getUsername() {
         return this.email;
     }
 
+    @JsonIgnore
     @Override
     public boolean isAccountNonExpired() {
         return true;
     }
 
+    @JsonIgnore
     @Override
     public boolean isAccountNonLocked() {
         return !this.isBanned;
     }
 
+    @JsonIgnore
     @Override
     public boolean isCredentialsNonExpired() {
         return true;
