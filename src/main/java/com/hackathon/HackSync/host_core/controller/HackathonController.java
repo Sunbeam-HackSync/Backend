@@ -14,11 +14,14 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import com.hackathon.HackSync.judge_core.dto.ProjectSubmissionResponseDTO;
 import com.hackathon.HackSync.participants_core.dto.ParticipantResponseDTO;
+import com.hackathon.HackSync.participants_core.dto.TeamWithParticipantsResponseDTO;
+
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.web.multipart.MultipartFile;
 import io.imagekit.models.files.FileUploadResponse;
+import com.hackathon.HackSync.utils.dto.ApiResponse;
 
 @RequiredArgsConstructor
 @RestController
@@ -28,78 +31,89 @@ public class HackathonController {
     private final HackathonService hackathonService;
 
     @PostMapping("/hackathon/create")
-    public ResponseEntity<HackathonResponse> createHackathon(@RequestBody HackathonRequestDTO hackathon,
+    public ResponseEntity<ApiResponse<HackathonResponse>> createHackathon(@RequestBody HackathonRequestDTO hackathon,
             Principal principal) {
         String email = principal.getName();
 
         HackathonResponse hackathonResponse = hackathonService.createHackathon(hackathon, email);
-        return new ResponseEntity<>(hackathonResponse, HttpStatus.CREATED);
+        return new ResponseEntity<>(
+                new ApiResponse<>("Hackathon created successfully", HttpStatus.CREATED, hackathonResponse),
+                HttpStatus.CREATED);
     }
 
     @GetMapping("/hackathon/{id}")
-    public ResponseEntity<?> getHackathonById(@PathVariable Long id, Principal principal) {
+    public ResponseEntity<ApiResponse<HackathonDetailResponseDTO>> getHackathonById(@PathVariable Long id,
+            Principal principal) {
         String email = principal.getName();
-        HackathonDetailResponseDTO detailResponseDTO= hackathonService.getHackathonById(id, email);
-        return new ResponseEntity<>(detailResponseDTO, HttpStatus.OK);
+        HackathonDetailResponseDTO detailResponseDTO = hackathonService.getHackathonById(id, email);
+        return new ResponseEntity<>(
+                new ApiResponse<>("Hackathon details fetched successfully", HttpStatus.OK, detailResponseDTO),
+                HttpStatus.OK);
     }
 
     @PutMapping("/hackathon/{id}")
-    public ResponseEntity<HackathonResponse> updateHackathon(
+    public ResponseEntity<ApiResponse<HackathonResponse>> updateHackathon(
             @PathVariable Long id,
             @RequestBody HackathonRequestDTO hackathonRequestDTO,
             Principal principal) {
         String email = principal.getName();
         HackathonResponse response = hackathonService.updateHackathon(id, hackathonRequestDTO, email);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return new ResponseEntity<>(new ApiResponse<>("Hackathon updated successfully", HttpStatus.OK, response),
+                HttpStatus.OK);
     }
 
     @GetMapping("/me")
-    public ResponseEntity<List<HackathonResponse>> getMyHackathons(Principal principal) {
+    public ResponseEntity<ApiResponse<List<HackathonResponse>>> getMyHackathons(Principal principal) {
         String email = principal.getName();
         List<HackathonResponse> hackathons = hackathonService.getMyHackathons(email);
-        return new ResponseEntity<>(hackathons, HttpStatus.OK);
+        return new ResponseEntity<>(
+                new ApiResponse<>("Fetched your hackathons successfully", HttpStatus.OK, hackathons), HttpStatus.OK);
     }
 
     @GetMapping("/hackathon/{id}/participants")
-    public ResponseEntity<List<ParticipantResponseDTO>> getHackathonParticipants(
+    public ResponseEntity<ApiResponse<List<TeamWithParticipantsResponseDTO>>> getHackathonParticipants(
             @PathVariable Long id,
             Principal principal) {
         String email = principal.getName();
-        List<ParticipantResponseDTO> participants = hackathonService.getHackathonParticipants(id, email);
-        return new ResponseEntity<>(participants, HttpStatus.OK);
+        List<TeamWithParticipantsResponseDTO> participants = hackathonService.getHackathonParticipants(id, email);
+        return new ResponseEntity<>(new ApiResponse<>("Participants fetched successfully", HttpStatus.OK, participants),
+                HttpStatus.OK);
     }
 
     @GetMapping("/hackathon/{id}/submissions")
-    public ResponseEntity<List<ProjectSubmissionResponseDTO>> getHackathonSubmissions(@PathVariable Long id,
+    public ResponseEntity<ApiResponse<List<ProjectSubmissionResponseDTO>>> getHackathonSubmissions(
+            @PathVariable Long id,
             Principal principal) {
         String email = principal.getName();
         List<ProjectSubmissionResponseDTO> submissions = hackathonService.getHackathonSubmissions(id, email);
-        return new ResponseEntity<>(submissions, HttpStatus.OK);
+        return new ResponseEntity<>(new ApiResponse<>("Submissions fetched successfully", HttpStatus.OK, submissions),
+                HttpStatus.OK);
     }
-    
+
     @PostMapping("/hackathon/{id}/judges")
-    public ResponseEntity<String> addJudge(@PathVariable Long id, Principal principal,
+    public ResponseEntity<ApiResponse<?>> addJudge(@PathVariable Long id, Principal principal,
             @RequestBody InviteRequestDTO requestDTO) {
         String email = principal.getName();
         hackathonService.inviteJudge(id, requestDTO, email);
-        return new ResponseEntity<>("Judge added successfully", HttpStatus.OK);
+        return new ResponseEntity<>(new ApiResponse<>("Judge added successfully", HttpStatus.OK, null), HttpStatus.OK);
     }
 
     @PostMapping("/hackathon/{id}/mentors")
-    public ResponseEntity<String> addMentor(@PathVariable Long id, Principal principal,
+    public ResponseEntity<ApiResponse<?>> addMentor(@PathVariable Long id, Principal principal,
             @RequestBody InviteRequestDTO requestDTO) {
         String email = principal.getName();
         hackathonService.inviteMentor(id, requestDTO, email);
-        return new ResponseEntity<>("Mentor added successfully", HttpStatus.OK);
+        return new ResponseEntity<>(new ApiResponse<>("Mentor added successfully", HttpStatus.OK, null), HttpStatus.OK);
     }
 
     @PutMapping("/hackathon/{id}/publish")
-    public ResponseEntity<String> publishHackathon(
+    public ResponseEntity<ApiResponse<?>> publishHackathon(
             @PathVariable Long id,
             Principal principal) {
         String email = principal.getName();
         hackathonService.publishHackathonResults(id, email);
-        return new ResponseEntity<>("Hackathon results published successfully", HttpStatus.OK);
+        return new ResponseEntity<>(new ApiResponse<>("Hackathon results published successfully", HttpStatus.OK, null),
+                HttpStatus.OK);
     }
 
     @PostMapping("/upload-image")

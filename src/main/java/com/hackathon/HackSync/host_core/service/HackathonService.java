@@ -1,6 +1,7 @@
 package com.hackathon.HackSync.host_core.service;
 
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import com.hackathon.HackSync.auth.entity.ROLE;
 import com.hackathon.HackSync.auth.entity.Users;
@@ -17,7 +18,9 @@ import com.hackathon.HackSync.judge_core.dto.ProjectSubmissionResponseDTO;
 import com.hackathon.HackSync.judge_core.entity.ProjectSubmissions;
 import com.hackathon.HackSync.judge_core.repository.ProjectSubmissionRepository;
 import com.hackathon.HackSync.participants_core.dto.ParticipantResponseDTO;
+import com.hackathon.HackSync.participants_core.dto.TeamWithParticipantsResponseDTO;
 import com.hackathon.HackSync.participants_core.entity.TeamMembers;
+import com.hackathon.HackSync.participants_core.entity.Teams;
 import com.hackathon.HackSync.participants_core.repository.TeamMemberRepository;
 import com.hackathon.HackSync.utils.exception.AccessDeniedException;
 import com.hackathon.HackSync.utils.exception.ResourceNotFoundException;
@@ -37,6 +40,8 @@ import com.hackathon.HackSync.mentor_core.entity.MentorStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+
 import org.springframework.web.multipart.MultipartFile;
 import io.imagekit.models.files.FileUploadResponse;
 
@@ -203,7 +208,7 @@ public class HackathonService {
                 .build()).toList();
     }
 
-    public List<ParticipantResponseDTO> getHackathonParticipants(Long hackId, String authenticatedEmail) {
+    public List<TeamWithParticipantsResponseDTO> getHackathonParticipants(Long hackId, String authenticatedEmail) {
         Users user = userRepository.findByEmail(authenticatedEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User does not exists"));
         Hackathons hackathon = hackathonRepository.findById(hackId)
@@ -220,13 +225,23 @@ public class HackathonService {
         }
 
         List<TeamMembers> members = teamMemberRepository.findByHackathonId(hackId);
-        return members.stream().map(m -> ParticipantResponseDTO.builder()
-                .userId(m.getUserId().getId())
-                .email(m.getUserId().getEmail())
-                .teamId(m.getTeamsId().getId())
-                .teamName(m.getTeamsId().getTeamName())
-                .isTeamLeader(m.isTeamLeader())
-                .build()).toList();
+
+        Map<Teams, List<TeamMembers>> groupedByTeam = members.stream()
+                .collect(Collectors.groupingBy(TeamMembers::getTeamsId));
+
+        return groupedByTeam.entrySet().stream()
+                .map(entry -> TeamWithParticipantsResponseDTO.builder()
+                        .teamId(entry.getKey().getId())
+                        .teamName(entry.getKey().getTeamName())
+                        .participants(entry.getValue().stream().map(m -> ParticipantResponseDTO.builder()
+                                .userId(m.getUserId().getId())
+                                .email(m.getUserId().getEmail())
+                                .teamId(m.getTeamsId().getId())
+                                .teamName(m.getTeamsId().getTeamName())
+                                .isTeamLeader(m.isTeamLeader())
+                                .build()).toList())
+                        .build())
+                .toList();
     }
 
     public List<ProjectSubmissionResponseDTO> getHackathonSubmissions(Long hackId, String authenticatedEmail) {

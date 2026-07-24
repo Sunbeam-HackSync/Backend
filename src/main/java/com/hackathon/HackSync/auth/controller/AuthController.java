@@ -10,9 +10,12 @@ import com.hackathon.HackSync.auth.dto.LoginRequestDto;
 import com.hackathon.HackSync.auth.dto.RegistrationRequestDto;
 import com.hackathon.HackSync.auth.dto.ResendOtpDto;
 import com.hackathon.HackSync.auth.dto.VerifyOtpDto;
+import com.hackathon.HackSync.utils.dto.ApiResponse;
+import com.hackathon.HackSync.utils.dto.ErrorResponse;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -31,88 +34,68 @@ public class AuthController {
     private int refreshTokenDurationMs;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegistrationRequestDto registerUserDto) {
-        try {
-            Users registeredUser = authenticationService.signUp(registerUserDto);
-            return ResponseEntity.ok(registeredUser);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<ApiResponse<Users>> register(@RequestBody RegistrationRequestDto registerUserDto) {
+        Users registeredUser = authenticationService.signUp(registerUserDto);
+        return ResponseEntity.ok(new ApiResponse<>("User registered successfully", HttpStatus.OK, registeredUser));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> authenticate(@RequestBody LoginRequestDto loginRequestDto, HttpServletResponse response) {
-        try {
-            Users user = authenticationService.signIn(loginRequestDto);
-            String jwtToken = jwtService.generateToken(user);
-            RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
+    public ResponseEntity<ApiResponse<LoginResponse>> authenticate(@RequestBody LoginRequestDto loginRequestDto, HttpServletResponse response) {
+        Users user = authenticationService.signIn(loginRequestDto);
+        String jwtToken = jwtService.generateToken(user);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
 
-            setRefreshTokenCookie(response, refreshToken.getToken());
+        setRefreshTokenCookie(response, refreshToken.getToken());
 
-            LoginResponse loginResponse = new LoginResponse(jwtToken, jwtService.getExpirationTime());
-            return ResponseEntity.ok(loginResponse);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        LoginResponse loginResponse = new LoginResponse(jwtToken, jwtService.getExpirationTime());
+        return ResponseEntity.ok(new ApiResponse<>("Login successful", HttpStatus.OK, loginResponse));
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<?> verifyOtpAndLogin(@RequestBody VerifyOtpDto verifyOtpDto, HttpServletResponse response) {
-        try {
-            Users user = authenticationService.verifyOtp(verifyOtpDto);
-            String jwtToken = jwtService.generateToken(user);
-            RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
+    public ResponseEntity<ApiResponse<LoginResponse>> verifyOtpAndLogin(@RequestBody VerifyOtpDto verifyOtpDto, HttpServletResponse response) {
+        Users user = authenticationService.verifyOtp(verifyOtpDto);
+        String jwtToken = jwtService.generateToken(user);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
 
-            setRefreshTokenCookie(response, refreshToken.getToken());
+        setRefreshTokenCookie(response, refreshToken.getToken());
 
-            LoginResponse loginResponse = new LoginResponse(jwtToken, jwtService.getExpirationTime());
-            return ResponseEntity.ok(loginResponse);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        LoginResponse loginResponse = new LoginResponse(jwtToken, jwtService.getExpirationTime());
+        return ResponseEntity.ok(new ApiResponse<>("OTP verified successfully", HttpStatus.OK, loginResponse));
     }
 
     @PostMapping("/resend")
-    public ResponseEntity<?> resendVerificationCode(@RequestBody ResendOtpDto resendOtpDto) {
-        try {
-            authenticationService.resendOtp(resendOtpDto);
-            return ResponseEntity.ok("OTP send to register mobile number");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<ApiResponse<Object>> resendVerificationCode(@RequestBody ResendOtpDto resendOtpDto) {
+        authenticationService.resendOtp(resendOtpDto);
+        return ResponseEntity.ok(new ApiResponse<>("OTP sent to register mobile number", HttpStatus.OK, null));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<?> refreshToken(
+    public ResponseEntity<ApiResponse<LoginResponse>> refreshToken(
             @CookieValue(name = "refresh_token", required = false) String refreshTokenString,
             HttpServletResponse response) {
         if (refreshTokenString == null) {
-            return ResponseEntity.status(401).body("Refresh Token is missing");
+            throw new RuntimeException("Refresh Token is missing");
         }
 
-        try {
-            RefreshToken refreshToken = refreshTokenService.findByToken(refreshTokenString)
-                    .orElseThrow(() -> new RuntimeException("Refresh token is not in database!"));
+        RefreshToken refreshToken = refreshTokenService.findByToken(refreshTokenString)
+                .orElseThrow(() -> new RuntimeException("Refresh token is not in database!"));
 
-            refreshToken = refreshTokenService.verifyExpirationAndRevocation(refreshToken);
+        refreshToken = refreshTokenService.verifyExpirationAndRevocation(refreshToken);
 
-            Users user = refreshToken.getUser();
+        Users user = refreshToken.getUser();
 
-            // Rotate refresh token
-            RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user.getId());
-            setRefreshTokenCookie(response, newRefreshToken.getToken());
+        // Rotate refresh token
+        RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user.getId());
+        setRefreshTokenCookie(response, newRefreshToken.getToken());
 
-            String jwtToken = jwtService.generateToken(user);
-            LoginResponse loginResponse = new LoginResponse(jwtToken, jwtService.getExpirationTime());
+        String jwtToken = jwtService.generateToken(user);
+        LoginResponse loginResponse = new LoginResponse(jwtToken, jwtService.getExpirationTime());
 
-            return ResponseEntity.ok(loginResponse);
-        } catch (Exception e) {
-            return ResponseEntity.status(401).body(e.getMessage());
-        }
+        return ResponseEntity.ok(new ApiResponse<>("Token refreshed successfully", HttpStatus.OK, loginResponse));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@CookieValue(name = "refresh_token", required = false) String refreshTokenString,
+    public ResponseEntity<ApiResponse<Object>> logout(@CookieValue(name = "refresh_token", required = false) String refreshTokenString,
             HttpServletResponse response) {
         if (refreshTokenString != null) {
             refreshTokenService.revokeToken(refreshTokenString);
@@ -127,7 +110,7 @@ public class AuthController {
         // basic clear is fine
         response.addCookie(cookie);
 
-        return ResponseEntity.ok("Logged out successfully");
+        return ResponseEntity.ok(new ApiResponse<>("Logged out successfully", HttpStatus.OK, null));
     }
 
     private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {

@@ -26,5 +26,9 @@ public interface TeamMemberRepository extends JpaRepository<TeamMembers, Long> {
 
     boolean existsByTeamsIdAndUserId(Teams team, Users member);
 
+    @Query("SELECT DISTINCT h FROM TeamMembers tm JOIN tm.teamsId t JOIN t.hackathonId h WHERE tm.userId.email = :email")
+    List<Hackathons> findParticipatedHackathonsByEmail(@Param("email") String email);
+
+    List<TeamMembers> findByTeamsId(Teams teamsId);
 
 }

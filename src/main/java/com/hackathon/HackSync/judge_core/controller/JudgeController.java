@@ -4,7 +4,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("api/v1/judge")
+@RequestMapping("judge")
 public class JudgeController {
     /*
         GET /api/v1/judge/assignments - Fetches the clean queue of projects assigned to this specific judge where is_evaluated is FALSE.
