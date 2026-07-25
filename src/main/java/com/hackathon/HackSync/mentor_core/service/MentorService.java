@@ -6,6 +6,9 @@ import com.hackathon.HackSync.mentor_core.dto.MentorTicketResponseDTO;
 import com.hackathon.HackSync.mentor_core.entity.HelpTickets;
 import com.hackathon.HackSync.mentor_core.entity.TicketStatus;
 import com.hackathon.HackSync.mentor_core.repository.helpTicketRepository;
+import com.hackathon.HackSync.mentor_core.repository.HackathonsMentorsRepository;
+import com.hackathon.HackSync.mentor_core.entity.HackathonsMentors;
+import com.hackathon.HackSync.mentor_core.entity.MentorStatus;
 import com.hackathon.HackSync.utils.exception.ResourceNotFoundException;
 import com.hackathon.HackSync.mentor_core.dto.MeetingRequestDTO;
 import com.hackathon.HackSync.mentor_core.dto.MeetingResponseDTO;
@@ -28,6 +31,7 @@ public class MentorService {
 
     private final UserRepository userRepository;
     private final helpTicketRepository helpTicketRepository;
+    private final HackathonsMentorsRepository hackathonsMentorsRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final MeetingService meetingService;
 
@@ -120,5 +124,25 @@ public class MentorService {
                 .claimedAt(ticket.getClaimedAt())
                 .resolvedAt(ticket.getResolvedAt())
                 .build();
+    }
+
+    public String updateInvitationStatus(Long hackathonId, String statusString, String authenticatedEmail) {
+        Users mentor = userRepository.findByEmail(authenticatedEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("Mentor not found"));
+
+        HackathonsMentors hackathonMentor = hackathonsMentorsRepository.findByHackathonId_IdAndMentorsId_Id(hackathonId, mentor.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Hackathon mentor invitation not found"));
+
+        MentorStatus status;
+        try {
+            status = MentorStatus.valueOf(statusString.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid mentor status");
+        }
+
+        hackathonMentor.setStatus(status);
+        hackathonsMentorsRepository.save(hackathonMentor);
+
+        return "Invitation status updated to " + status.name();
     }
 }

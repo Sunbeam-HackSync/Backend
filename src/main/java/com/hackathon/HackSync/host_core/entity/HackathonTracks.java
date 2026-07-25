@@ -3,9 +3,6 @@ package com.hackathon.HackSync.host_core.entity;
 import com.hackathon.HackSync.utils.entities.BaseClass;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
-import java.time.LocalDateTime;
 
 @Entity
 @AllArgsConstructor

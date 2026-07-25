@@ -11,4 +11,6 @@ public interface ProjectSubmissionRepository extends JpaRepository<ProjectSubmis
     
     @Query("SELECT ps FROM ProjectSubmissions ps JOIN FETCH ps.teamsId WHERE ps.hackathonId.id = :hackathonId")
     List<ProjectSubmissions> findByHackathonId(@Param("hackathonId") Long hackathonId);
+
+    boolean existsByTeamsId(com.hackathon.HackSync.participants_core.entity.Teams teamsId);
 }

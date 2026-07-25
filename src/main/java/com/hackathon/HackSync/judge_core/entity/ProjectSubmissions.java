@@ -22,6 +22,10 @@ public class ProjectSubmissions extends BaseClass {
     @JoinColumn(name = "hackathon_id", nullable = false)
     private Hackathons hackathonId;
 
+    /* 
+    No need to have the tracks of the hackthons 
+     */
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "track_id")
     private HackathonTracks trackId;
@@ -45,6 +49,9 @@ public class ProjectSubmissions extends BaseClass {
 
     @Column(name = "live_demo_url")
     private String liveDemoUrl;
+
+    @Column(name = "youtube_url")
+    private String youtubeUrl;
 
     @Column(name = "submission_status")
     @Enumerated(EnumType.STRING)

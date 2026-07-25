@@ -53,16 +53,14 @@ public class MentorController {
         return ResponseEntity.ok(new ApiResponse<>("Ticket resolved successfully", HttpStatus.OK, ticket));
     }
 
-    /*
-     * 
-     * 
-     * PUT /mentor/tickets/{id}/claim - Updates the ticket by adding the mentor_id,
-     * pasting the manual Google Meet link, and changing the status to CLAIMED.
-     * 
-     * PUT /mentor/tickets/{id}/resolve - Updates the resolved_at timestamp and
-     * closes out the ticket once the mentor finishes the call.
-     * 
-     * GET /mentor/tickets/me - Fetches a history of all tickets claimed and
-     * resolved by this specific mentor.
-     */
+
+    @PutMapping("/invitations/{hackathonId}/status")
+    public ResponseEntity<ApiResponse<String>> updateInvitationStatus(
+            @PathVariable Long hackathonId,
+            @RequestParam String status,
+            Principal principal) {
+        String message = mentorService.updateInvitationStatus(hackathonId, status, principal.getName());
+        return ResponseEntity.ok(new ApiResponse<>(message, HttpStatus.OK, null));
+    }
+
 }

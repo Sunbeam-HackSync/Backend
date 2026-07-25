@@ -17,6 +17,11 @@ import org.springframework.stereotype.Service;
 import com.hackathon.HackSync.judge_core.dto.ProjectSubmissionResponseDTO;
 import com.hackathon.HackSync.judge_core.entity.ProjectSubmissions;
 import com.hackathon.HackSync.judge_core.repository.ProjectSubmissionRepository;
+import com.hackathon.HackSync.judge_core.dto.EvaluationCriteriaRequestDTO;
+import com.hackathon.HackSync.judge_core.dto.EvaluationCriteriaResponseDTO;
+import com.hackathon.HackSync.judge_core.entity.EvaluationCriteria;
+import com.hackathon.HackSync.judge_core.entity.ProjectSubmissionStatus;
+import com.hackathon.HackSync.judge_core.repository.EvaluationCriteriaRepository;
 import com.hackathon.HackSync.participants_core.dto.ParticipantResponseDTO;
 import com.hackathon.HackSync.participants_core.dto.TeamWithParticipantsResponseDTO;
 import com.hackathon.HackSync.participants_core.entity.TeamMembers;
@@ -55,6 +60,7 @@ public class HackathonService {
     private final ProjectSubmissionRepository projectSubmissionRepository;
     private final HackathonJudgesRepository hackathonJudgesRepository;
     private final HackathonsMentorsRepository hackathonsMentorsRepository;
+    private final EvaluationCriteriaRepository evaluationCriteriaRepository;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
     private final ImageKitService imageKitService;
@@ -398,7 +404,7 @@ public class HackathonService {
         hackathonJudgesRepository.save(hackathonJudge);
 
         // I have to send Email ROLE_JUDGE
-        sendInvitationEmail(inviteRequestDTO.getEmail(), ROLE.JUDGE,  hackathon.getTitle());
+        sendInvitationEmail(inviteRequestDTO.getEmail(), ROLE.JUDGE, hackathon.getTitle());
     }
 
     public void inviteMentor(Long hackathonId, InviteRequestDTO inviteRequestDTO, String authenticatedEmail) {
@@ -437,7 +443,33 @@ public class HackathonService {
         sendInvitationEmail(inviteRequestDTO.getEmail(), ROLE.MENTOR, hackathon.getTitle());
     }
 
-    // Note : This Endpoint should return the top 3 teams after publishing the hackathon results. the status will be changing form PENDING_RESULTS to PUBLISHED once the results are published by the judges after evaluating all the teams submissions. 
+    public void assignSuperJudge(Long hackathonId, Long judgeUserId, String authenticatedEmail) {
+        Users host = userRepository.findByEmail(authenticatedEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User does not exists"));
+        Hackathons hackathon = hackathonRepository.findById(hackathonId)
+                .orElseThrow(() -> new ResourceNotFoundException("Hackathon does not exists"));
+
+        if (!host.getRole().equals(ROLE.ADMIN)) {
+            if (host.getRole().equals(ROLE.HOST)) {
+                if (!hackathon.getHostId().getId().equals(host.getId())) {
+                    throw new AccessDeniedException("Access Denied: You are not the creator of this hackathon");
+                }
+            } else {
+                throw new AccessDeniedException("Access Denied: Only HOSTs or ADMINs can assign super judges");
+            }
+        }
+
+        HackathonJudges hackathonJudge = hackathonJudgesRepository.findByHackathonsId_IdAndJudgeUserId_Id(hackathonId, judgeUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Judge is not assigned to this hackathon"));
+        
+        hackathonJudge.setSuperJudge(true);
+        hackathonJudgesRepository.save(hackathonJudge);
+    }
+
+    // Note : This Endpoint should return the top 3 teams after publishing the
+    // hackathon results. the status will be changing form COMPLETED to
+    // PUBLISHED once the results are published by the judges after evaluating all
+    // the teams submissions.
     public void publishHackathonResults(Long hackathonId, String authenticatedEmail) {
         Users host = userRepository.findByEmail(authenticatedEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User does not exists"));
@@ -469,5 +501,122 @@ public class HackathonService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to upload image", e);
         }
+    }
+
+    public EvaluationCriteriaResponseDTO createEvaluationCriteria(Long hackathonId, EvaluationCriteriaRequestDTO dto,
+            String authenticatedEmail) {
+        Users host = userRepository.findByEmail(authenticatedEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User does not exists"));
+        Hackathons hackathon = hackathonRepository.findById(hackathonId)
+                .orElseThrow(() -> new ResourceNotFoundException("Hackathon does not exists"));
+
+        if (!host.getRole().equals(ROLE.ADMIN)) {
+            if (host.getRole().equals(ROLE.HOST)) {
+                if (!hackathon.getHostId().getId().equals(host.getId())) {
+                    throw new AccessDeniedException("Access Denied: You are not the creator of this hackathon");
+                }
+            } else {
+                throw new AccessDeniedException("Access Denied: Only HOSTs or ADMINs can create evaluation criteria");
+            }
+        }
+
+        EvaluationCriteria criteria = new EvaluationCriteria();
+        criteria.setHackathonId(hackathon);
+        criteria.setCriteriaName(dto.getCriteriaName());
+        criteria.setDescription(dto.getDescription());
+        criteria.setMaxScore(dto.getMaxScore());
+
+        EvaluationCriteria savedCriteria = evaluationCriteriaRepository.save(criteria);
+
+        return EvaluationCriteriaResponseDTO.builder()
+                .id(savedCriteria.getId())
+                .hackathonId(hackathon.getId())
+                .criteriaName(savedCriteria.getCriteriaName())
+                .description(savedCriteria.getDescription())
+                .maxScore(savedCriteria.getMaxScore())
+                .build();
+    }
+
+    public EvaluationCriteriaResponseDTO updateEvaluationCriteria(Long hackathonId, Long criteriaId,
+            EvaluationCriteriaRequestDTO dto, String authenticatedEmail) {
+        Users host = userRepository.findByEmail(authenticatedEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User does not exists"));
+        Hackathons hackathon = hackathonRepository.findById(hackathonId)
+                .orElseThrow(() -> new ResourceNotFoundException("Hackathon does not exists"));
+
+        if (!host.getRole().equals(ROLE.ADMIN)) {
+            if (host.getRole().equals(ROLE.HOST)) {
+                if (!hackathon.getHostId().getId().equals(host.getId())) {
+                    throw new AccessDeniedException("Access Denied: You are not the creator of this hackathon");
+                }
+            } else {
+                throw new AccessDeniedException("Access Denied: Only HOSTs or ADMINs can update evaluation criteria");
+            }
+        }
+
+        EvaluationCriteria criteria = evaluationCriteriaRepository.findById(criteriaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Evaluation criteria does not exists"));
+
+        if (!criteria.getHackathonId().getId().equals(hackathonId)) {
+            throw new RuntimeException("Evaluation criteria does not belong to this hackathon");
+        }
+
+        if (dto.getCriteriaName() != null)
+            criteria.setCriteriaName(dto.getCriteriaName());
+        if (dto.getDescription() != null)
+            criteria.setDescription(dto.getDescription());
+        if (dto.getMaxScore() != null)
+            criteria.setMaxScore(dto.getMaxScore());
+
+        EvaluationCriteria savedCriteria = evaluationCriteriaRepository.save(criteria);
+
+        return EvaluationCriteriaResponseDTO.builder()
+                .id(savedCriteria.getId())
+                .hackathonId(hackathon.getId())
+                .criteriaName(savedCriteria.getCriteriaName())
+                .description(savedCriteria.getDescription())
+                .maxScore(savedCriteria.getMaxScore())
+                .build();
+    }
+
+    public ProjectSubmissionResponseDTO disqualifySubmission(Long hackathonId, Long submissionId,
+            String authenticatedEmail) {
+        Users host = userRepository.findByEmail(authenticatedEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User does not exists"));
+        Hackathons hackathon = hackathonRepository.findById(hackathonId)
+                .orElseThrow(() -> new ResourceNotFoundException("Hackathon does not exists"));
+
+        if (!host.getRole().equals(ROLE.ADMIN)) {
+            if (host.getRole().equals(ROLE.HOST)) {
+                if (!hackathon.getHostId().getId().equals(host.getId())) {
+                    throw new AccessDeniedException("Access Denied: You are not the creator of this hackathon");
+                }
+            } else {
+                throw new AccessDeniedException("Access Denied: Only HOSTs or ADMINs can disqualify submissions");
+            }
+        }
+
+        ProjectSubmissions submission = projectSubmissionRepository.findById(submissionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project submission does not exists"));
+
+        if (!submission.getHackathonId().getId().equals(hackathonId)) {
+            throw new RuntimeException("Project submission does not belong to this hackathon");
+        }
+
+        submission.setSubmissionStatus(ProjectSubmissionStatus.DISQUALIFIED);
+        projectSubmissionRepository.save(submission);
+
+        return ProjectSubmissionResponseDTO.builder()
+                .id(submission.getId())
+                .projectTitle(submission.getProjectTitle())
+                .tagLine(submission.getTagLine())
+                .description(submission.getDescription())
+                .liveDemoUrl(submission.getLiveDemoUrl())
+                .githubRepoUrl(submission.getGithubRepoUrl())
+                .submissionStatus(submission.getSubmissionStatus())
+                .teamId(submission.getTeamsId().getId())
+                .teamName(submission.getTeamsId().getTeamName())
+                .submittedAt(submission.getSubmittedAt())
+                .build();
     }
 }

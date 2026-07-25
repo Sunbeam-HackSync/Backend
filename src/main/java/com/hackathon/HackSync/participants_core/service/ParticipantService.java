@@ -10,13 +10,16 @@ import com.hackathon.HackSync.participants_core.dto.TeamRequestDTO;
 import com.hackathon.HackSync.participants_core.dto.TeamResponseDTO;
 import com.hackathon.HackSync.participants_core.entity.TeamMembers;
 import com.hackathon.HackSync.participants_core.entity.Teams;
-import com.hackathon.HackSync.participants_core.entity.Submissions;
+import com.hackathon.HackSync.judge_core.entity.ProjectSubmissions;
+import com.hackathon.HackSync.judge_core.entity.ProjectSubmissionStatus;
+import com.hackathon.HackSync.judge_core.repository.ProjectSubmissionRepository;
+import com.hackathon.HackSync.host_core.entity.HackathonTracks;
+import com.hackathon.HackSync.host_core.repository.HackathonTrackRepository;
 import com.hackathon.HackSync.participants_core.dto.TeamUpdateRequestDTO;
 import com.hackathon.HackSync.participants_core.dto.SubmissionRequestDTO;
 import com.hackathon.HackSync.participants_core.dto.SubmissionResponseDTO;
 import com.hackathon.HackSync.participants_core.dto.ParticipantResponseDTO;
 import com.hackathon.HackSync.participants_core.dto.TeamWithParticipantsResponseDTO;
-import com.hackathon.HackSync.participants_core.repository.SubmissionRepository;
 import com.hackathon.HackSync.participants_core.repository.TeamMemberRepository;
 import com.hackathon.HackSync.participants_core.repository.TeamRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +41,8 @@ public class ParticipantService {
         private final HackathonRepository hackathonRepository;
         private final TeamRepository teamRepository;
         private final TeamMemberRepository teamMemberRepository;
-        private final SubmissionRepository submissionRepository;
+        private final ProjectSubmissionRepository projectSubmissionRepository;
+        private final HackathonTrackRepository hackathonTrackRepository;
 
         @Transactional
         public void addMember(Long teamId,
@@ -298,27 +302,44 @@ public class ParticipantService {
                 TeamMembers memberRecord = teamMemberRepository.findByTeamsIdAndUserId(team, user)
                                 .orElseThrow(() -> new RuntimeException("You are not a member of this team"));
 
-                // Check if submission already exists
-                if (submissionRepository.existsByTeamId(team.getId())) {
+                if (projectSubmissionRepository.existsByTeamsId(team)) {
                         throw new RuntimeException("Team already has a submission");
                 }
 
-                Submissions submission = new Submissions();
-                submission.setTeam(team);
-                submission.setTitle(requestDTO.getTitle());
-                submission.setDescription(requestDTO.getDescription());
-                submission.setGithubLink(requestDTO.getGithubLink());
-                submission.setDemoVideoLink(requestDTO.getDemoVideoLink());
+                Hackathons hackathon = team.getHackathonId();
+                HackathonTracks track = null;
+                if (requestDTO.getTrackId() != null) {
+                        track = hackathonTrackRepository.findById(requestDTO.getTrackId())
+                                        .orElseThrow(() -> new RuntimeException("Track not found"));
+                }
 
-                Submissions savedSubmission = submissionRepository.save(submission);
+                ProjectSubmissions submission = new ProjectSubmissions();
+                submission.setTeamsId(team);
+                submission.setHackathonId(hackathon);
+                submission.setTrackId(track);
+                submission.setProjectTitle(requestDTO.getProjectTitle());
+                submission.setTagLine(requestDTO.getTagLine());
+                submission.setDescription(requestDTO.getDescription());
+                submission.setGithubRepoUrl(requestDTO.getGithubRepoUrl());
+                submission.setLiveDemoUrl(requestDTO.getLiveDemoUrl());
+                submission.setYoutubeUrl(requestDTO.getYoutubeUrl());
+                submission.setSubmissionStatus(ProjectSubmissionStatus.SUBMITTED);
+                submission.setSubmittedAt(LocalDateTime.now());
+
+                ProjectSubmissions savedSubmission = projectSubmissionRepository.save(submission);
 
                 return SubmissionResponseDTO.builder()
-                                .submissionId(savedSubmission.getId())
+                                .projectSubmissionId(savedSubmission.getId())
                                 .teamId(team.getId())
-                                .title(savedSubmission.getTitle())
+                                .hackathonId(hackathon.getId())
+                                .trackId(track != null ? track.getId() : null)
+                                .projectTitle(savedSubmission.getProjectTitle())
+                                .tagLine(savedSubmission.getTagLine())
                                 .description(savedSubmission.getDescription())
-                                .githubLink(savedSubmission.getGithubLink())
-                                .demoVideoLink(savedSubmission.getDemoVideoLink())
+                                .githubRepoUrl(savedSubmission.getGithubRepoUrl())
+                                .liveDemoUrl(savedSubmission.getLiveDemoUrl())
+                                .youtubeUrl(savedSubmission.getYoutubeUrl())
+                                .submissionStatus(savedSubmission.getSubmissionStatus().name())
                                 .build();
         }
 }

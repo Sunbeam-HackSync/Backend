@@ -10,12 +10,17 @@ public class SubmissionRequestDTO {
     @NotNull(message = "Team ID is required")
     private Long teamId;
 
-    @NotBlank(message = "Title is required")
-    private String title;
+    @NotBlank(message = "Project Title is required")
+    private String projectTitle;
+    
+    private String tagLine;
 
     @NotBlank(message = "Description is required")
     private String description;
 
-    private String githubLink;
-    private String demoVideoLink;
+    private String githubRepoUrl;
+    private String liveDemoUrl;
+    private String youtubeUrl;
+    /*remove this in future cuz there is no need of track */
+    private Long trackId;
 }
