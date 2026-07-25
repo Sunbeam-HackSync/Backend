@@ -207,7 +207,7 @@ public class ParticipantService {
 
                 // Validate hackathon status
                 if (hackathon.getHackathonStatus() != HackathonStatus.ACTIVE
-                                && hackathon.getHackathonStatus() != HackathonStatus.PUBLISHED) {
+                        ) {
 
                         throw new RuntimeException("Teams can only be created for ACTIVE or PUBLISHED hackathons");
                 }

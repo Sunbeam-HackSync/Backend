@@ -275,8 +275,8 @@ public class HackathonService {
                 .build()).toList();
     }
 
-    private void sendInvitationEmail(String email, String role, String hackathonTitle) {
-        String subject = "Invitation to be a " + role + " at " + hackathonTitle;
+    private void sendInvitationEmail(String email, ROLE role, String hackathonTitle) {
+        String subject = "Invitation to be a " + role.name() + " at " + hackathonTitle;
         String htmlTemplate = """
                 <!DOCTYPE html>
                 <html lang="en">
@@ -319,7 +319,7 @@ public class HackathonService {
                               <table cellpadding="0" cellspacing="0" role="presentation">
                                 <tr>
                                   <td style="border-radius:4px;background-color:#0A0A0A;">
-                                    <a href="http://hackathon-platform.com/register?email={{email}"
+                                    <a href="http://hackathon-platform.com/register?email={{email}}&role={{role}}"
                                        style="display:inline-block;padding:13px 28px;font-size:14px;font-weight:500;color:#FFFFFF;text-decoration:none;letter-spacing:0.02em;border-radius:4px;">
                                       Accept Invitation &rarr;
                                     </a>
@@ -329,7 +329,7 @@ public class HackathonService {
                               <p style="margin:28px 0 0;font-size:12px;color:#A3A3A3;line-height:1.6;">
                                 Or copy this link into your browser:<br>
                                 <span style="color:#6B6B6B;word-break:break-all;">
-                                  http://hackathon-platform.com/register?email={{email}}
+                                  http://hackathon-platform.com/register?email={{email}}&role={{role}}
                                 </span>
                               </p>
 
@@ -355,7 +355,8 @@ public class HackathonService {
 
         String htmlMessage = htmlTemplate
                 .replace("{{hackathonTitle}}", hackathonTitle)
-                .replace("{{email}}", email);
+                .replace("{{email}}", email)
+                .replace("{{role}}", role.name());
         try {
             emailService.sendVerificationEmail(email, subject, htmlMessage);
         } catch (Exception e) {
@@ -397,7 +398,7 @@ public class HackathonService {
         hackathonJudgesRepository.save(hackathonJudge);
 
         // I have to send Email ROLE_JUDGE
-        sendInvitationEmail(inviteRequestDTO.getEmail(), ROLE.JUDGE.name(), hackathon.getTitle());
+        sendInvitationEmail(inviteRequestDTO.getEmail(), ROLE.JUDGE,  hackathon.getTitle());
     }
 
     public void inviteMentor(Long hackathonId, InviteRequestDTO inviteRequestDTO, String authenticatedEmail) {
@@ -433,9 +434,10 @@ public class HackathonService {
         hackathonsMentorsRepository.save(hackathonMentor);
 
         // I have to send Email to ROLE_MENTOR
-        sendInvitationEmail(inviteRequestDTO.getEmail(), ROLE.MENTOR.name(), hackathon.getTitle());
+        sendInvitationEmail(inviteRequestDTO.getEmail(), ROLE.MENTOR, hackathon.getTitle());
     }
 
+    // Note : This Endpoint should return the top 3 teams after publishing the hackathon results. the status will be changing form PENDING_RESULTS to PUBLISHED once the results are published by the judges after evaluating all the teams submissions. 
     public void publishHackathonResults(Long hackathonId, String authenticatedEmail) {
         Users host = userRepository.findByEmail(authenticatedEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User does not exists"));
@@ -451,12 +453,13 @@ public class HackathonService {
                 throw new AccessDeniedException("Access Denied: Only HOSTs or ADMINs can publish results");
             }
         }
+
         // check hackathon approved status then publish it
-        if (hackathon.getHackathonStatus() == HackathonStatus.COMPLETED) {
-            throw new RuntimeException("Hackathon results are already published"); // HackathonException
+        if (hackathon.getHackathonStatus() != HackathonStatus.COMPLETED) {
+            throw new RuntimeException("Hackathon results are not yet completed"); // HackathonException
         }
 
-        hackathon.setHackathonStatus(HackathonStatus.COMPLETED);
+        hackathon.setHackathonStatus(HackathonStatus.PUBLISHED);
         hackathonRepository.save(hackathon);
     }
 

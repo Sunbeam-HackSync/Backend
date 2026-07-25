@@ -28,7 +28,7 @@ public class AdminService {
     private final ProjectSubmissionRepository projectSubmissionRepository;
 
     public List<HackathonDetailResponseDTO> getPendingHackathons() {
-        return hackathonRepository.findByHackathonStatus(HackathonStatus.PENDING_APPROVAL)
+        return hackathonRepository.findByHackathonStatus(HackathonStatus.DRAFT)
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());

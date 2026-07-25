@@ -38,7 +38,7 @@ public class SecurityConfiguration {
                         // FIX 1: Explicitly permit all preflight OPTIONS requests globally
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        .requestMatchers("/auth/**", "/v3/api-docs", "/swagger-ui.html", "swagger-ui/index.html")
+                        .requestMatchers("/auth/**", "/v3/api-docs", "/swagger-ui.html", "swagger-ui/index.html", "/participants/hackathons")
                         .permitAll()
                         .requestMatchers("/admin/**", "/actuator/**").hasRole("ADMIN")
                         .requestMatchers("/host/**").hasAnyRole("HOST", "ADMIN")
