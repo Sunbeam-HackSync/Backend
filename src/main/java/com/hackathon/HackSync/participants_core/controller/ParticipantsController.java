@@ -138,4 +138,11 @@ public class ParticipantsController {
         ParticipantProfileDTO updatedProfile = participantService.updateProfile(request, principal.getName());
         return ResponseEntity.ok(new ApiResponse<>("Profile updated successfully", HttpStatus.OK, updatedProfile));
     }
+
+    @GetMapping("/tickets")
+    public ResponseEntity<ApiResponse<List<GetHelpTicketInfoDTO>>> getHelpTicket(@PathVariable Long hackathonId, @PathVariable Long TeamId, Principal principal){
+
+        List<GetHelpTicketInfoDTO> helpTickets = helpTicketService.getTicketByTeamsAndHackathonId(hackathonId, TeamId, principal.getName());
+        return ResponseEntity.ok(new ApiResponse<>("Help ticket fetched successfully", HttpStatus.OK, helpTickets));
+    }
 }

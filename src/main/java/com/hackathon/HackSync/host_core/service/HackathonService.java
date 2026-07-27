@@ -3,7 +3,6 @@ package com.hackathon.HackSync.host_core.service;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import com.hackathon.HackSync.admin_core.entity.HackathonReviews;
 import com.hackathon.HackSync.admin_core.repository.HackathonReviewsRepository;
 import com.hackathon.HackSync.auth.entity.ROLE;
 import com.hackathon.HackSync.auth.entity.Users;
@@ -13,6 +12,9 @@ import com.hackathon.HackSync.host_core.entity.HackathonStatus;
 import com.hackathon.HackSync.host_core.entity.Hackathons;
 import com.hackathon.HackSync.host_core.repository.HackathonRepository;
 import com.hackathon.HackSync.host_core.responses.HackathonResponse;
+import com.hackathon.HackSync.host_core.dto.HackathonFullDetailResponseDTO;
+import com.hackathon.HackSync.host_core.dto.JudgeResponseDTO;
+import com.hackathon.HackSync.host_core.dto.MentorResponseDTO;
 import com.hackathon.HackSync.participants_core.dto.HackathonDetailResponseDTO;
 import org.springframework.stereotype.Service;
 
@@ -228,7 +230,7 @@ public class HackathonService {
                 .build();
     }
 
-    public List<HackathonResponse> getMyHackathons(String authenticatedEmail) {
+    public List<HackathonFullDetailResponseDTO> getMyHackathons(String authenticatedEmail) {
         Users user = userRepository.findByEmail(authenticatedEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User does not exists"));
 
@@ -241,10 +243,65 @@ public class HackathonService {
             String feedbackNotes = null;
             if (h.getHackathonStatus() == HackathonStatus.REJECTED) {
                 feedbackNotes = hackathonReviewsRepository.findByHackathonId(h)
-                        .map(HackathonReviews::getFeedbackNotes)
+                        .map(com.hackathon.HackSync.admin_core.entity.HackathonReviews::getFeedbackNotes)
                         .orElse(null);
             }
-            return HackathonResponse.builder()
+
+            // Teams
+            List<TeamMembers> members = teamMemberRepository.findByHackathonId(h.getId());
+            java.util.Map<Teams, List<TeamMembers>> groupedByTeam = members.stream()
+                    .collect(Collectors.groupingBy(TeamMembers::getTeamsId));
+            List<TeamWithParticipantsResponseDTO> teamDTOs = groupedByTeam.entrySet().stream()
+                    .map(entry -> TeamWithParticipantsResponseDTO.builder()
+                            .teamId(entry.getKey().getId())
+                            .teamName(entry.getKey().getTeamName())
+                            .participants(entry.getValue().stream().map(m -> com.hackathon.HackSync.participants_core.dto.ParticipantResponseDTO.builder()
+                                    .userId(m.getUserId().getId())
+                                    .email(m.getUserId().getEmail())
+                                    .teamId(m.getTeamsId().getId())
+                                    .teamName(m.getTeamsId().getTeamName())
+                                    .isTeamLeader(m.isTeamLeader())
+                                    .build()).toList())
+                            .build())
+                    .toList();
+
+            // Judges
+            List<HackathonJudges> judges = hackathonJudgesRepository.findByHackathonsId(h);
+            List<JudgeResponseDTO> judgeDTOs = judges.stream().map(j -> JudgeResponseDTO.builder()
+                    .id(j.getId())
+                    .userId(j.getJudgeUserId().getId())
+                    .email(j.getJudgeUserId().getEmail())
+                    .status(j.getStatus())
+                    .isSuperJudge(j.isSuperJudge())
+                    .assignedAt(j.getAssignedAt())
+                    .build()).toList();
+
+            // Mentors
+            List<HackathonsMentors> mentors = hackathonsMentorsRepository.findByHackathonId(h);
+            List<MentorResponseDTO> mentorDTOs = mentors.stream().map(m -> MentorResponseDTO.builder()
+                    .id(m.getId())
+                    .userId(m.getMentorsId().getId())
+                    .email(m.getMentorsId().getEmail())
+                    .expertiseTags(m.getExpertiseTags())
+                    .status(m.getStatus())
+                    .build()).toList();
+
+            // Submissions
+            List<ProjectSubmissions> submissions = projectSubmissionRepository.findByHackathonId(h.getId());
+            List<ProjectSubmissionResponseDTO> submissionDTOs = submissions.stream().map(s -> ProjectSubmissionResponseDTO.builder()
+                    .id(s.getId())
+                    .projectTitle(s.getProjectTitle())
+                    .tagLine(s.getTagLine())
+                    .description(s.getDescription())
+                    .githubRepoUrl(s.getGithubRepoUrl())
+                    .liveDemoUrl(s.getLiveDemoUrl())
+                    .submissionStatus(s.getSubmissionStatus())
+                    .teamId(s.getTeamsId().getId())
+                    .teamName(s.getTeamsId().getTeamName())
+                    .submittedAt(s.getSubmittedAt())
+                    .build()).toList();
+
+            return HackathonFullDetailResponseDTO.builder()
                     .id(h.getId())
                     .title(h.getTitle())
                     .tagline(h.getTagline())
@@ -252,6 +309,10 @@ public class HackathonService {
                     .hackathonStarts(h.getHackathonStart())
                     .hackathonEnds(h.getHackathonEnd())
                     .feedBackNotes(feedbackNotes)
+                    .teams(teamDTOs)
+                    .judges(judgeDTOs)
+                    .mentors(mentorDTOs)
+                    .submissions(submissionDTOs)
                     .build();
         }).toList();
     }

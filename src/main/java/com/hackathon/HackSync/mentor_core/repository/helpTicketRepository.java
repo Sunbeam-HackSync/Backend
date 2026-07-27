@@ -8,6 +8,9 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.hackathon.HackSync.mentor_core.entity.TicketStatus;
+
+import jakarta.persistence.LockModeType;
+
 import com.hackathon.HackSync.auth.entity.Users;
 import java.util.List;
 import java.util.Optional;
@@ -20,7 +23,9 @@ public interface helpTicketRepository extends JpaRepository<HelpTickets, Long> {
 
     List<HelpTickets> findByStatus(TicketStatus status);
 
-    @Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT h FROM HelpTickets h WHERE h.id = :id")
     Optional<HelpTickets> findByIdForUpdate(@Param("id") Long id);
+
+    List<HelpTickets> findByHackathonId_IdAndTeamId_Id(Long hackathonId, Long teamId);
 }

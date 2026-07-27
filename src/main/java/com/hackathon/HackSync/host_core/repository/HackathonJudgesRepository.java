@@ -17,4 +17,6 @@ public interface HackathonJudgesRepository extends JpaRepository<HackathonJudges
     List<HackathonJudges> findByHackathonsIdAndStatus(Hackathons hackathon, JudgeInvitationStatus status);
     
     List<HackathonJudges> findByJudgeUserId_Id(Long judgeId);
+    
+    List<HackathonJudges> findByHackathonsId(Hackathons hackathons);
 }

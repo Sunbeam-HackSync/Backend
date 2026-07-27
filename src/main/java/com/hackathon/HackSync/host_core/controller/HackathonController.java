@@ -3,6 +3,7 @@ package com.hackathon.HackSync.host_core.controller;
 import com.hackathon.HackSync.host_core.dto.HackathonRequestDTO;
 import com.hackathon.HackSync.host_core.dto.InviteRequestDTO;
 import com.hackathon.HackSync.host_core.responses.HackathonResponse;
+import com.hackathon.HackSync.host_core.dto.HackathonFullDetailResponseDTO;
 import com.hackathon.HackSync.host_core.service.HackathonService;
 import com.hackathon.HackSync.participants_core.dto.HackathonDetailResponseDTO;
 import lombok.RequiredArgsConstructor;
@@ -64,9 +65,9 @@ public class HackathonController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse<List<HackathonResponse>>> getMyHackathons(Principal principal) {
+    public ResponseEntity<ApiResponse<List<HackathonFullDetailResponseDTO>>> getMyHackathons(Principal principal) {
         String email = principal.getName();
-        List<HackathonResponse> hackathons = hackathonService.getMyHackathons(email);
+        List<HackathonFullDetailResponseDTO> hackathons = hackathonService.getMyHackathons(email);
         return new ResponseEntity<>(
                 new ApiResponse<>("Fetched your hackathons successfully", HttpStatus.OK, hackathons), HttpStatus.OK);
     }
