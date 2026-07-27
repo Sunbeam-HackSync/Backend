@@ -6,6 +6,7 @@ import com.hackathon.HackSync.host_core.entity.HackathonStatus;
 import com.hackathon.HackSync.host_core.entity.Hackathons;
 import com.hackathon.HackSync.host_core.repository.HackathonRepository;
 import com.hackathon.HackSync.participants_core.dto.HackathonDetailResponseDTO;
+import com.hackathon.HackSync.participants_core.dto.HackathonWinnerResponseDTO;
 import com.hackathon.HackSync.participants_core.dto.TeamRequestDTO;
 import com.hackathon.HackSync.participants_core.dto.TeamResponseDTO;
 import com.hackathon.HackSync.participants_core.entity.TeamMembers;
@@ -26,7 +27,11 @@ import com.hackathon.HackSync.judge_core.repository.JudgesScoresRepository;
 import com.hackathon.HackSync.judge_core.repository.HackathonWinnersRepository;
 import com.hackathon.HackSync.judge_core.entity.JudgesScores;
 import com.hackathon.HackSync.judge_core.entity.HackathonWinners;
+import com.hackathon.HackSync.participants_core.entity.ParticipantsProfiles;
+import com.hackathon.HackSync.participants_core.repository.ParticipantsProfilesRepository;
+import com.hackathon.HackSync.participants_core.dto.ParticipantProfileDTO;
 import com.hackathon.HackSync.participants_core.dto.ParticipantResultResponseDTO;
+import com.hackathon.HackSync.participants_core.dto.HackathonWithTeamDetailsResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -51,6 +57,7 @@ public class ParticipantService {
         private final HackathonTrackRepository hackathonTrackRepository;
         private final JudgesScoresRepository judgesScoresRepository;
         private final HackathonWinnersRepository hackathonWinnersRepository;
+        private final ParticipantsProfilesRepository participantsProfilesRepository;
 
         @Transactional
         public void addMember(Long teamId,
@@ -149,6 +156,9 @@ public class ParticipantService {
                                 .hackathonStart(hackathon.getHackathonStart())
                                 .hackathonEnd(hackathon.getHackathonEnd())
                                 .hackathonStatus(hackathon.getHackathonStatus())
+                                .faq(hackathon.getFaq())
+                                .rules(hackathon.getRules())
+                                .resultDeclarationDate(hackathon.getResultDeclarationDate())
                                 .build();
         }
 
@@ -171,6 +181,9 @@ public class ParticipantService {
                                                 .hackathonStart(hackathon.getHackathonStart())
                                                 .hackathonEnd(hackathon.getHackathonEnd())
                                                 .hackathonStatus(hackathon.getHackathonStatus())
+                                                .faq(hackathon.getFaq())
+                                                .rules(hackathon.getRules())
+                                                .resultDeclarationDate(hackathon.getResultDeclarationDate())
                                                 .build())
                                 .toList();
         }
@@ -191,13 +204,21 @@ public class ParticipantService {
                 List<TeamMembers> members = teamMemberRepository.findByTeamsId(team);
 
                 List<ParticipantResponseDTO> participantDTOs = members.stream()
-                                .map(m -> ParticipantResponseDTO.builder()
-                                                .userId(m.getUserId().getId())
-                                                .email(m.getUserId().getEmail())
-                                                .teamId(m.getTeamsId().getId())
-                                                .teamName(m.getTeamsId().getTeamName())
-                                                .isTeamLeader(m.isTeamLeader())
-                                                .build())
+                                .map(m -> {
+                                        String fullName = participantsProfilesRepository
+                                                        .findByUserId_Id(m.getUserId().getId())
+                                                        .map(ParticipantsProfiles::getFullName)
+                                                        .orElse(m.getUserId().getEmail().split("@")[0]);
+
+                                        return ParticipantResponseDTO.builder()
+                                                        .userId(m.getUserId().getId())
+                                                        .email(m.getUserId().getEmail())
+                                                        .fullName(fullName)
+                                                        .teamId(m.getTeamsId().getId())
+                                                        .teamName(m.getTeamsId().getTeamName())
+                                                        .isTeamLeader(m.isTeamLeader())
+                                                        .build();
+                                })
                                 .toList();
 
                 return TeamWithParticipantsResponseDTO.builder()
@@ -219,7 +240,7 @@ public class ParticipantService {
 
                 // Validate hackathon status and registration dates
                 LocalDateTime now = LocalDateTime.now();
-                
+
                 if (hackathon.getHackathonStatus() != HackathonStatus.APPROVED) {
                         throw new RuntimeException("Teams can only be created for APPROVED hackathons");
                 }
@@ -304,7 +325,8 @@ public class ParticipantService {
                         totalScore += js.getScoreGiven();
                 }
 
-                HackathonWinners winner = hackathonWinnersRepository.findBySubmissionId_Id(submission.getId()).orElse(null);
+                HackathonWinners winner = hackathonWinnersRepository.findBySubmissionId_Id(submission.getId())
+                                .orElse(null);
 
                 return ParticipantResultResponseDTO.builder()
                                 .hackathonId(hackathon.getId())
@@ -316,6 +338,67 @@ public class ParticipantService {
                                 .scores(scoreDetails)
                                 .totalScore(totalScore)
                                 .build();
+        }
+
+        public ParticipantProfileDTO createProfile(ParticipantProfileDTO request, String authenticatedEmail) {
+                Users user = userRepository.findByEmail(authenticatedEmail)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
+
+                if (participantsProfilesRepository.findByUserId_Id(user.getId()).isPresent()) {
+                        throw new RuntimeException("Profile already exists. Use update instead.");
+                }
+
+                ParticipantsProfiles newProfile = new ParticipantsProfiles();
+                newProfile.setUserId(user);
+                newProfile.setFullName(request.getFullName());
+                newProfile.setAvatarURL(request.getAvatarURL());
+                newProfile.setBio(request.getBio());
+                newProfile.setGithubURL(request.getGithubURL());
+                newProfile.setLinkedInURL(request.getLinkedInURL());
+                newProfile.setXURL(request.getXURL());
+                newProfile.setTechSkills(request.getTechSkills());
+
+                participantsProfilesRepository.save(newProfile);
+
+                return request;
+        }
+
+        public ParticipantProfileDTO getProfile(String authenticatedEmail) {
+                Users user = userRepository.findByEmail(authenticatedEmail)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
+
+                ParticipantsProfiles profile = participantsProfilesRepository.findByUserId_Id(user.getId())
+                                .orElseThrow(() -> new RuntimeException("Profile not found"));
+
+                return ParticipantProfileDTO.builder()
+                                .fullName(profile.getFullName())
+                                .avatarURL(profile.getAvatarURL())
+                                .bio(profile.getBio())
+                                .githubURL(profile.getGithubURL())
+                                .linkedInURL(profile.getLinkedInURL())
+                                .xURL(profile.getXURL())
+                                .techSkills(profile.getTechSkills())
+                                .build();
+        }
+
+        public ParticipantProfileDTO updateProfile(ParticipantProfileDTO request, String authenticatedEmail) {
+                Users user = userRepository.findByEmail(authenticatedEmail)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
+
+                ParticipantsProfiles profile = participantsProfilesRepository.findByUserId_Id(user.getId())
+                                .orElseThrow(() -> new RuntimeException("Profile not found"));
+
+                profile.setFullName(request.getFullName());
+                profile.setAvatarURL(request.getAvatarURL());
+                profile.setBio(request.getBio());
+                profile.setGithubURL(request.getGithubURL());
+                profile.setLinkedInURL(request.getLinkedInURL());
+                profile.setXURL(request.getXURL());
+                profile.setTechSkills(request.getTechSkills());
+
+                participantsProfilesRepository.save(profile);
+
+                return request;
         }
 
         public TeamResponseDTO updateTeam(Long teamId, TeamUpdateRequestDTO requestDTO, String leaderEmail) {
@@ -364,22 +447,16 @@ public class ParticipantService {
                 // Verify user is in the team
                 TeamMembers memberRecord = teamMemberRepository.findByTeamsIdAndUserId(team, user)
                                 .orElseThrow(() -> new RuntimeException("You are not a member of this team"));
-
+                                     
                 if (projectSubmissionRepository.existsByTeamsId(team)) {
                         throw new RuntimeException("Team already has a submission");
                 }
 
                 Hackathons hackathon = team.getHackathonId();
-                HackathonTracks track = null;
-                if (requestDTO.getTrackId() != null) {
-                        track = hackathonTrackRepository.findById(requestDTO.getTrackId())
-                                        .orElseThrow(() -> new RuntimeException("Track not found"));
-                }
 
                 ProjectSubmissions submission = new ProjectSubmissions();
                 submission.setTeamsId(team);
                 submission.setHackathonId(hackathon);
-                submission.setTrackId(track);
                 submission.setProjectTitle(requestDTO.getProjectTitle());
                 submission.setTagLine(requestDTO.getTagLine());
                 submission.setDescription(requestDTO.getDescription());
@@ -395,7 +472,6 @@ public class ParticipantService {
                                 .projectSubmissionId(savedSubmission.getId())
                                 .teamId(team.getId())
                                 .hackathonId(hackathon.getId())
-                                .trackId(track != null ? track.getId() : null)
                                 .projectTitle(savedSubmission.getProjectTitle())
                                 .tagLine(savedSubmission.getTagLine())
                                 .description(savedSubmission.getDescription())
@@ -404,5 +480,45 @@ public class ParticipantService {
                                 .youtubeUrl(savedSubmission.getYoutubeUrl())
                                 .submissionStatus(savedSubmission.getSubmissionStatus().name())
                                 .build();
+        }
+
+        public HackathonWithTeamDetailsResponseDTO getHackathonWithTeamDetails(Long hackathonId, String email) {
+                HackathonDetailResponseDTO hackathonDetails = getPublicHackathonDetail(hackathonId);
+
+                Users user = userRepository.findByEmail(email)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
+
+                // Find team for this user in this hackathon
+                Optional<TeamMembers> teamMember = teamMemberRepository.findByHackathonIdAndUserId(hackathonId, user.getId());
+
+                TeamWithParticipantsResponseDTO teamDetails = null;
+                if (teamMember.isPresent()) {
+                        teamDetails = seeMyTeamDetails(teamMember.get().getTeamsId().getId(), email);
+                }
+
+                return HackathonWithTeamDetailsResponseDTO.builder()
+                                .hackathonDetails(hackathonDetails)
+                                .teamDetails(teamDetails)
+                                .build();
+        }
+
+        public List<HackathonWinnerResponseDTO> getHackathonWinners(Long hackathonId) {
+                Hackathons hackathon = hackathonRepository.findById(hackathonId)
+                                .orElseThrow(() -> new RuntimeException("Hackathon not found"));
+
+                if (hackathon.getHackathonStatus() != HackathonStatus.COMPLETED) {
+                        throw new RuntimeException("Results are not yet declared for this hackathon");
+                }
+
+                List<HackathonWinners> winners = hackathonWinnersRepository.findByHackathonId_Id(hackathonId);
+
+                return winners.stream().map(winner -> HackathonWinnerResponseDTO.builder()
+                                .categoryName(winner.getCategoryName())
+                                .teamName(winner.getSubmissionId().getTeamsId().getTeamName())
+                                .projectName(winner.getSubmissionId().getProjectTitle())
+                                .projectDescription(winner.getSubmissionId().getDescription())
+                                .githubUrl(winner.getSubmissionId().getGithubRepoUrl())
+                                .liveDemoUrl(winner.getSubmissionId().getLiveDemoUrl())
+                                .build()).toList();
         }
 }

@@ -9,6 +9,7 @@ import com.hackathon.HackSync.participants_core.dto.HackathonDetailResponseDTO;
 
 import lombok.RequiredArgsConstructor;
 
+import java.security.Principal;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -29,27 +31,38 @@ public class AdminController {
 
     @GetMapping("/hackathons/pending")
     public ResponseEntity<ApiResponse<List<HackathonDetailResponseDTO>>> getPendingHackathons() {
-        return ResponseEntity.ok(new ApiResponse<>("Fetched pending hackathons successfully", HttpStatus.OK, adminService.getPendingHackathons()));
+        return ResponseEntity.ok(new ApiResponse<>("Fetched pending hackathons successfully", HttpStatus.OK,
+                adminService.getPendingHackathons()));
     }
 
     @PutMapping("/hackathons/{id}/approve")
-    public ResponseEntity<ApiResponse<HackathonDetailResponseDTO>> approveHackathon(@PathVariable Long id) {
-        return ResponseEntity.ok(new ApiResponse<>("Hackathon approved successfully", HttpStatus.OK, adminService.approveHackathon(id)));
+    public ResponseEntity<ApiResponse<HackathonDetailResponseDTO>> approveHackathon(
+            @PathVariable Long id,
+            Principal principal,
+            @RequestParam(required = false) String feedbackNotes) {
+        return ResponseEntity.ok(new ApiResponse<>("Hackathon approved successfully", HttpStatus.OK,
+                adminService.approveHackathon(id, principal.getName(), feedbackNotes)));
     }
 
     @PutMapping("/hackathons/{id}/reject")
-    public ResponseEntity<ApiResponse<HackathonDetailResponseDTO>> rejectHackathon(@PathVariable Long id) {
-        return ResponseEntity.ok(new ApiResponse<>("Hackathon rejected successfully", HttpStatus.OK, adminService.rejectHackathon(id)));
+    public ResponseEntity<ApiResponse<HackathonDetailResponseDTO>> rejectHackathon(
+            @PathVariable Long id,
+            Principal principal,
+            @RequestParam(required = false) String feedbackNotes) {
+        return ResponseEntity.ok(new ApiResponse<>("Hackathon rejected successfully", HttpStatus.OK,
+                adminService.rejectHackathon(id, principal.getName(), feedbackNotes)));
     }
 
     @GetMapping("/metrics")
     public ResponseEntity<ApiResponse<PlatformMetricsDto>> getPlatformMetrics() {
-        return ResponseEntity.ok(new ApiResponse<>("Platform metrics fetched successfully", HttpStatus.OK, adminService.getPlatformMetrics()));
+        return ResponseEntity.ok(new ApiResponse<>("Platform metrics fetched successfully", HttpStatus.OK,
+                adminService.getPlatformMetrics()));
     }
 
     @PutMapping("/users/{id}/ban")
     public ResponseEntity<ApiResponse<Users>> banUser(@PathVariable Long id) {
-        return ResponseEntity.ok(new ApiResponse<>("User banned successfully", HttpStatus.OK, adminService.banUser(id)));
+        return ResponseEntity
+                .ok(new ApiResponse<>("User banned successfully", HttpStatus.OK, adminService.banUser(id)));
     }
 
     /*

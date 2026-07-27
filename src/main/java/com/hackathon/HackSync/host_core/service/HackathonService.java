@@ -3,6 +3,8 @@ package com.hackathon.HackSync.host_core.service;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.hackathon.HackSync.admin_core.entity.HackathonReviews;
+import com.hackathon.HackSync.admin_core.repository.HackathonReviewsRepository;
 import com.hackathon.HackSync.auth.entity.ROLE;
 import com.hackathon.HackSync.auth.entity.Users;
 import com.hackathon.HackSync.auth.repository.UserRepository;
@@ -64,6 +66,7 @@ public class HackathonService {
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
     private final ImageKitService imageKitService;
+    private final HackathonReviewsRepository hackathonReviewsRepository;
 
     public HackathonResponse createHackathon(HackathonRequestDTO hackathonRequestDTO, String authenticatedEmail) {
         Users host = userRepository.findByEmail(authenticatedEmail)
@@ -89,6 +92,10 @@ public class HackathonService {
         hackathon.setRegistrationEnd(hackathonRequestDTO.getRegistrationEnd());
         hackathon.setHackathonStart(hackathonRequestDTO.getHackathonStart());
         hackathon.setHackathonEnd(hackathonRequestDTO.getHackathonEnd());
+
+        hackathon.setFaq(hackathonRequestDTO.getFaq());
+        hackathon.setRules(hackathonRequestDTO.getRules());
+        hackathon.setResultDeclarationDate(hackathonRequestDTO.getResultDeclarationDate());
 
         hackathon.setHackathonStatus(HackathonStatus.DRAFT);
 
@@ -122,6 +129,13 @@ public class HackathonService {
             }
         }
 
+        String feedbackNotes = null;
+        if (hackathon.getHackathonStatus() == HackathonStatus.REJECTED) {
+            feedbackNotes = hackathonReviewsRepository.findByHackathonId(hackathon)
+                    .map(com.hackathon.HackSync.admin_core.entity.HackathonReviews::getFeedbackNotes)
+                    .orElse(null);
+        }
+
         return HackathonDetailResponseDTO.builder()
                 .id(hackathon.getId())
                 .title(hackathon.getTitle())
@@ -136,6 +150,10 @@ public class HackathonService {
                 .hackathonStart(hackathon.getHackathonStart())
                 .hackathonEnd(hackathon.getHackathonEnd())
                 .hackathonStatus(hackathon.getHackathonStatus())
+                .faq(hackathon.getFaq())
+                .rules(hackathon.getRules())
+                .resultDeclarationDate(hackathon.getResultDeclarationDate())
+                .feedBackNotes(feedbackNotes)
                 .build();
     }
 
@@ -183,7 +201,21 @@ public class HackathonService {
         if (hackathonRequestDTO.getHackathonEnd() != null)
             hackathon.setHackathonEnd(hackathonRequestDTO.getHackathonEnd());
 
+        if (hackathonRequestDTO.getFaq() != null)
+            hackathon.setFaq(hackathonRequestDTO.getFaq());
+        if (hackathonRequestDTO.getRules() != null)
+            hackathon.setRules(hackathonRequestDTO.getRules());
+        if (hackathonRequestDTO.getResultDeclarationDate() != null)
+            hackathon.setResultDeclarationDate(hackathonRequestDTO.getResultDeclarationDate());
+
         Hackathons savedHackathon = hackathonRepository.save(hackathon);
+
+        String feedbackNotes = null;
+        if (savedHackathon.getHackathonStatus() == HackathonStatus.REJECTED) {
+            feedbackNotes = hackathonReviewsRepository.findByHackathonId(savedHackathon)
+                    .map(com.hackathon.HackSync.admin_core.entity.HackathonReviews::getFeedbackNotes)
+                    .orElse(null);
+        }
 
         return HackathonResponse.builder()
                 .id(savedHackathon.getId())
@@ -192,6 +224,7 @@ public class HackathonService {
                 .hackathonStatus(savedHackathon.getHackathonStatus())
                 .hackathonStarts(savedHackathon.getHackathonStart())
                 .hackathonEnds(savedHackathon.getHackathonEnd())
+                .feedBackNotes(feedbackNotes)
                 .build();
     }
 
@@ -204,14 +237,23 @@ public class HackathonService {
         }
 
         List<Hackathons> hackathons = hackathonRepository.findByHostId(user);
-        return hackathons.stream().map(h -> HackathonResponse.builder()
-                .id(h.getId())
-                .title(h.getTitle())
-                .tagline(h.getTagline())
-                .hackathonStatus(h.getHackathonStatus())
-                .hackathonStarts(h.getHackathonStart())
-                .hackathonEnds(h.getHackathonEnd())
-                .build()).toList();
+        return hackathons.stream().map(h -> {
+            String feedbackNotes = null;
+            if (h.getHackathonStatus() == HackathonStatus.REJECTED) {
+                feedbackNotes = hackathonReviewsRepository.findByHackathonId(h)
+                        .map(HackathonReviews::getFeedbackNotes)
+                        .orElse(null);
+            }
+            return HackathonResponse.builder()
+                    .id(h.getId())
+                    .title(h.getTitle())
+                    .tagline(h.getTagline())
+                    .hackathonStatus(h.getHackathonStatus())
+                    .hackathonStarts(h.getHackathonStart())
+                    .hackathonEnds(h.getHackathonEnd())
+                    .feedBackNotes(feedbackNotes)
+                    .build();
+        }).toList();
     }
 
     public List<TeamWithParticipantsResponseDTO> getHackathonParticipants(Long hackId, String authenticatedEmail) {
@@ -386,6 +428,9 @@ public class HackathonService {
     // hackathon results. the status will be changing form COMPLETED to
     // PUBLISHED once the results are published by the judges after evaluating all
     // the teams submissions.
+    /*
+        check this
+     */
     public void publishHackathonResults(Long hackathonId, String authenticatedEmail) {
         Users host = userRepository.findByEmail(authenticatedEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User does not exists"));

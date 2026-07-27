@@ -6,13 +6,13 @@ import lombok.Data;
 
 @Data
 public class SubmissionRequestDTO {
-    
+
     @NotNull(message = "Team ID is required")
     private Long teamId;
 
     @NotBlank(message = "Project Title is required")
     private String projectTitle;
-    
+
     private String tagLine;
 
     @NotBlank(message = "Description is required")
@@ -21,6 +21,5 @@ public class SubmissionRequestDTO {
     private String githubRepoUrl;
     private String liveDemoUrl;
     private String youtubeUrl;
-    /*remove this in future cuz there is no need of track */
-    private Long trackId;
+
 }

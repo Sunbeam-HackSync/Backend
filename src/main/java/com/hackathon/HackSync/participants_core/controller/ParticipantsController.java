@@ -30,11 +30,19 @@ public class ParticipantsController {
         Page<HackathonDetailResponseDTO> hackathons = participantService.getDiscoveryFeed(page, size);
         return ResponseEntity.ok(new ApiResponse<>("Discovery feed fetched successfully", HttpStatus.OK, hackathons));
     }
+    /*Make this enpoint public */
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<HackathonDetailResponseDTO>> getHackathonById(@PathVariable Long id) {
         HackathonDetailResponseDTO details = participantService.getPublicHackathonDetail(id);
         return ResponseEntity.ok(new ApiResponse<>("Hackathon details fetched successfully", HttpStatus.OK, details));
+    }
+
+    @GetMapping("/hackathons/{id}/my-details")
+    public ResponseEntity<ApiResponse<HackathonWithTeamDetailsResponseDTO>> getHackathonWithTeamDetails(
+            @PathVariable Long id, Principal principal) {
+        HackathonWithTeamDetailsResponseDTO response = participantService.getHackathonWithTeamDetails(id, principal.getName());
+        return ResponseEntity.ok(new ApiResponse<>("Hackathon and team details fetched successfully", HttpStatus.OK, response));
     }
 
     @GetMapping("/my-hackathons")
@@ -99,5 +107,35 @@ public class ParticipantsController {
             Principal principal) {
         ParticipantResultResponseDTO result = participantService.getHackathonResult(hackathonId, principal.getName());
         return ResponseEntity.ok(new ApiResponse<>("Hackathon result retrieved successfully", HttpStatus.OK, result));
+    }
+
+    @GetMapping("/hackathon/{hackathonId}/winners")
+    public ResponseEntity<ApiResponse<List<HackathonWinnerResponseDTO>>> getHackathonWinners(
+            @PathVariable Long hackathonId) {
+        List<HackathonWinnerResponseDTO> winners = participantService.getHackathonWinners(hackathonId);
+        return ResponseEntity.ok(new ApiResponse<>("Hackathon winners retrieved successfully", HttpStatus.OK, winners));
+    }
+
+    @PostMapping("/profile")
+    public ResponseEntity<ApiResponse<ParticipantProfileDTO>> createProfile(
+            @RequestBody ParticipantProfileDTO request,
+            Principal principal) {
+        ParticipantProfileDTO createdProfile = participantService.createProfile(request, principal.getName());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>("Profile created successfully", HttpStatus.CREATED, createdProfile));
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<ApiResponse<ParticipantProfileDTO>> getProfile(Principal principal) {
+        ParticipantProfileDTO profile = participantService.getProfile(principal.getName());
+        return ResponseEntity.ok(new ApiResponse<>("Profile fetched successfully", HttpStatus.OK, profile));
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse<ParticipantProfileDTO>> updateProfile(
+            @RequestBody ParticipantProfileDTO request,
+            Principal principal) {
+        ParticipantProfileDTO updatedProfile = participantService.updateProfile(request, principal.getName());
+        return ResponseEntity.ok(new ApiResponse<>("Profile updated successfully", HttpStatus.OK, updatedProfile));
     }
 }

@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Getter
 @Setter
-@ToString(callSuper = true, exclude = {"hackathonId", "trackId", "teamsId"})
+@ToString(callSuper = true, exclude = { "hackathonId", "teamsId" })
 @Entity
 @AttributeOverride(name = "id", column = @Column(name = "project_submission_id"))
 @Table(name = "project_submissions")
@@ -23,15 +23,7 @@ public class ProjectSubmissions extends BaseClass {
     @JoinColumn(name = "hackathon_id", nullable = false)
     private Hackathons hackathonId;
 
-    /* 
-    No need to have the tracks of the hackthons 
-     */
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "track_id")
-    private HackathonTracks trackId;
-
-    //1 team 1 project
+    // 1 team 1 project
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_id", nullable = false)
     private Teams teamsId;

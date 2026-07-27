@@ -57,4 +57,13 @@ public class Hackathons extends BaseClass {
     @Column(name = "hackathon_status")
     @Enumerated(EnumType.STRING)
     private HackathonStatus hackathonStatus;
+
+    @Column(name = "faq", columnDefinition = "TEXT")
+    private String faq;
+
+    @Column(name = "rules", columnDefinition = "TEXT")
+    private String rules;
+
+    @Column(name = "result_declaration_date")
+    private LocalDateTime resultDeclarationDate;
 }
