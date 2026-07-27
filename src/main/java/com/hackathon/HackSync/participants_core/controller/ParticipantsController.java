@@ -93,29 +93,11 @@ public class ParticipantsController {
         return ResponseEntity.ok(new ApiResponse<>("Team details fetched successfully", HttpStatus.OK, response));
     }
 
-    /*
-     * GET /participants/hackathons - Fetches a paginated list of all hackathons
-     * with the status ACTIVE or APPROVED for the discovery feed.
-     * 
-     * GET /participants/hackathons/{id} - Retrieves the detailed rules, timeline,
-     * and description of a specific hackathon.
-     * 
-     * POST /participants/createTeam - Creates a new team and automatically assigns
-     * the creator as the is_team_leader.
-     * 
-     * POST /participants/helpTickets - Generates a new Help Ticket (Issue + Tech
-     * Stack) with an OPEN status.
-     * 
-     * GET /participants/teams/looking - Fetches all teams within a hackathon where
-     * is_looking_for_members is TRUE to populate the matchmaking board.
-     * 
-     * POST /participants/teams/{id}/join - Adds the participant to the team_members
-     * mapping table.
-     * 
-     * PUT /participants/teams/{id} - or toggle their looking status.
-     * 
-     * POST /participants/submissions - Creates the final project record (Title,
-     * Description, GitHub link, Demo Video link) tied to the team.
-     */
-
+    @GetMapping("/hackathon/{hackathonId}/result")
+    public ResponseEntity<ApiResponse<ParticipantResultResponseDTO>> getHackathonResult(
+            @PathVariable Long hackathonId,
+            Principal principal) {
+        ParticipantResultResponseDTO result = participantService.getHackathonResult(hackathonId, principal.getName());
+        return ResponseEntity.ok(new ApiResponse<>("Hackathon result retrieved successfully", HttpStatus.OK, result));
+    }
 }

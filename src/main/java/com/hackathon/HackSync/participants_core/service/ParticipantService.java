@@ -22,11 +22,17 @@ import com.hackathon.HackSync.participants_core.dto.ParticipantResponseDTO;
 import com.hackathon.HackSync.participants_core.dto.TeamWithParticipantsResponseDTO;
 import com.hackathon.HackSync.participants_core.repository.TeamMemberRepository;
 import com.hackathon.HackSync.participants_core.repository.TeamRepository;
+import com.hackathon.HackSync.judge_core.repository.JudgesScoresRepository;
+import com.hackathon.HackSync.judge_core.repository.HackathonWinnersRepository;
+import com.hackathon.HackSync.judge_core.entity.JudgesScores;
+import com.hackathon.HackSync.judge_core.entity.HackathonWinners;
+import com.hackathon.HackSync.participants_core.dto.ParticipantResultResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -43,6 +49,8 @@ public class ParticipantService {
         private final TeamMemberRepository teamMemberRepository;
         private final ProjectSubmissionRepository projectSubmissionRepository;
         private final HackathonTrackRepository hackathonTrackRepository;
+        private final JudgesScoresRepository judgesScoresRepository;
+        private final HackathonWinnersRepository hackathonWinnersRepository;
 
         @Transactional
         public void addMember(Long teamId,
@@ -209,11 +217,19 @@ public class ParticipantService {
                 Hackathons hackathon = hackathonRepository.findById(requestDTO.getHackathonId())
                                 .orElseThrow(() -> new RuntimeException("Hackathon not found"));
 
-                // Validate hackathon status
-                if (hackathon.getHackathonStatus() != HackathonStatus.ACTIVE
-                        ) {
+                // Validate hackathon status and registration dates
+                LocalDateTime now = LocalDateTime.now();
+                
+                if (hackathon.getHackathonStatus() != HackathonStatus.APPROVED) {
+                        throw new RuntimeException("Teams can only be created for APPROVED hackathons");
+                }
 
-                        throw new RuntimeException("Teams can only be created for ACTIVE or PUBLISHED hackathons");
+                if (hackathon.getRegistrationStart() != null && now.isBefore(hackathon.getRegistrationStart())) {
+                        throw new RuntimeException("Registration for this hackathon has not started yet");
+                }
+
+                if (hackathon.getRegistrationEnd() != null && now.isAfter(hackathon.getRegistrationEnd())) {
+                        throw new RuntimeException("Registration for this hackathon has ended");
                 }
 
                 // Check if user already belongs to a team in this hackathon
@@ -253,6 +269,53 @@ public class ParticipantService {
                 response.setLeaderId(user.getId());
 
                 return response;
+        }
+
+        public ParticipantResultResponseDTO getHackathonResult(Long hackathonId, String authenticatedEmail) {
+                Users user = userRepository.findByEmail(authenticatedEmail)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
+
+                Hackathons hackathon = hackathonRepository.findById(hackathonId)
+                                .orElseThrow(() -> new RuntimeException("Hackathon not found"));
+
+                if (hackathon.getHackathonStatus() != HackathonStatus.PUBLISHED) {
+                        throw new RuntimeException("Results are not yet published for this hackathon");
+                }
+
+                TeamMembers teamMember = teamMemberRepository.findByHackathonIdAndUserId(hackathonId, user.getId())
+                                .orElseThrow(() -> new RuntimeException("You did not participate in this hackathon"));
+
+                Teams team = teamMember.getTeamsId();
+
+                ProjectSubmissions submission = projectSubmissionRepository.findByTeamsId(team)
+                                .orElseThrow(() -> new RuntimeException("No project submission found for your team"));
+
+                List<JudgesScores> scores = judgesScoresRepository.findByProjectId_Id(submission.getId());
+
+                double totalScore = 0;
+                List<ParticipantResultResponseDTO.ScoreDetailDTO> scoreDetails = new ArrayList<>();
+                for (JudgesScores js : scores) {
+                        scoreDetails.add(ParticipantResultResponseDTO.ScoreDetailDTO.builder()
+                                        .criteriaName(js.getCriteriaId().getCriteriaName())
+                                        .maxScore(js.getCriteriaId().getMaxScore())
+                                        .scoreGiven(js.getScoreGiven())
+                                        .feedbackNotes(js.getFeedBackNotes())
+                                        .build());
+                        totalScore += js.getScoreGiven();
+                }
+
+                HackathonWinners winner = hackathonWinnersRepository.findBySubmissionId_Id(submission.getId()).orElse(null);
+
+                return ParticipantResultResponseDTO.builder()
+                                .hackathonId(hackathon.getId())
+                                .hackathonTitle(hackathon.getTitle())
+                                .teamName(team.getTeamName())
+                                .projectName(submission.getProjectTitle())
+                                .isWinner(winner != null)
+                                .awardCategory(winner != null ? winner.getCategoryName() : null)
+                                .scores(scoreDetails)
+                                .totalScore(totalScore)
+                                .build();
         }
 
         public TeamResponseDTO updateTeam(Long teamId, TeamUpdateRequestDTO requestDTO, String leaderEmail) {

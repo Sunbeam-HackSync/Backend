@@ -8,6 +8,7 @@ import com.hackathon.HackSync.auth.entity.OTPVerification;
 import com.hackathon.HackSync.auth.entity.Users;
 import com.hackathon.HackSync.auth.repository.OTPRepository;
 import com.hackathon.HackSync.auth.repository.UserRepository;
+import com.hackathon.HackSync.utils.service.EmailService;
 import com.hackathon.HackSync.utils.exception.AlreadyVerifiedException;
 import com.hackathon.HackSync.utils.exception.InvalidOTPException;
 import com.hackathon.HackSync.utils.exception.ResourceNotFoundException;

@@ -16,6 +16,11 @@ import com.hackathon.HackSync.judge_core.repository.ProjectSubmissionRepository;
 import com.hackathon.HackSync.utils.exception.AccessDeniedException;
 import com.hackathon.HackSync.utils.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+import com.hackathon.HackSync.judge_core.entity.EvaluationCriteria;
+import com.hackathon.HackSync.judge_core.entity.JudgesScores;
+import com.hackathon.HackSync.judge_core.dto.JudgeScoreSubmissionRequestDTO;
+import com.hackathon.HackSync.judge_core.repository.EvaluationCriteriaRepository;
+import com.hackathon.HackSync.judge_core.repository.JudgesScoresRepository;
 
 import java.util.List;
 
@@ -32,6 +37,8 @@ public class JudgeService {
     private final HackathonJudgesRepository hackathonJudgesRepository;
     private final HackathonWinnersRepository hackathonWinnersRepository;
     private final ProjectSubmissionRepository projectSubmissionRepository;
+    private final JudgesScoresRepository judgesScoresRepository;
+    private final EvaluationCriteriaRepository evaluationCriteriaRepository;
 
     public String updateInvitationStatus(Long hackathonId, String statusString, String authenticatedEmail) {
         Users judge = userRepository.findByEmail(authenticatedEmail)
@@ -107,5 +114,38 @@ public class JudgeService {
                     .isSuperJudge(assignment.isSuperJudge())
                     .build();
         }).toList();
+    }
+
+    public void submitScores(JudgeScoreSubmissionRequestDTO dto, String authenticatedEmail) {
+        Users judge = userRepository.findByEmail(authenticatedEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("Judge not found"));
+
+        ProjectSubmissions project = projectSubmissionRepository.findById(dto.getProjectId())
+                .orElseThrow(() -> new ResourceNotFoundException("Project submission not found"));
+
+        if (project.getAssignedJudgeId() == null || !project.getAssignedJudgeId().getId().equals(judge.getId())) {
+            throw new AccessDeniedException("You are not assigned to evaluate this project");
+        }
+
+        List<JudgesScores> existingScores = judgesScoresRepository.findByProjectId_Id(project.getId());
+        for (JudgesScores score : existingScores) {
+            if (score.getJudgeId().getId().equals(judge.getId())) {
+                throw new RuntimeException("You have already scored this project.");
+            }
+        }
+
+        for (JudgeScoreSubmissionRequestDTO.ScoreEntryDTO scoreEntry : dto.getScores()) {
+            EvaluationCriteria criteria = evaluationCriteriaRepository.findById(scoreEntry.getCriteriaId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Evaluation criteria not found: " + scoreEntry.getCriteriaId()));
+
+            JudgesScores judgesScore = new JudgesScores();
+            judgesScore.setJudgeId(judge);
+            judgesScore.setProjectId(project);
+            judgesScore.setCriteriaId(criteria);
+            judgesScore.setScoreGiven(scoreEntry.getScoreGiven());
+            judgesScore.setFeedBackNotes(scoreEntry.getFeedbackNotes());
+            
+            judgesScoresRepository.save(judgesScore);
+        }
     }
 }

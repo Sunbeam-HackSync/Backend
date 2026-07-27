@@ -1,6 +1,7 @@
 package com.hackathon.HackSync.judge_core.controller;
 
 import com.hackathon.HackSync.judge_core.dto.AssignedHackathonResponseDTO;
+import com.hackathon.HackSync.judge_core.dto.JudgeScoreSubmissionRequestDTO;
 import com.hackathon.HackSync.judge_core.dto.WinnerSubmissionRequestDTO;
 import com.hackathon.HackSync.judge_core.service.JudgeService;
 import com.hackathon.HackSync.utils.dto.ApiResponse;
@@ -38,8 +39,17 @@ public class JudgeController {
     }
 
     @GetMapping("/hackathons")
-    public ResponseEntity<ApiResponse<List<AssignedHackathonResponseDTO>>> getMyAssignedHackathons(Principal principal) {
+    public ResponseEntity<ApiResponse<List<AssignedHackathonResponseDTO>>> getMyAssignedHackathons(
+            Principal principal) {
         List<AssignedHackathonResponseDTO> hackathons = judgeService.getMyAssignedHackathons(principal.getName());
-        return ResponseEntity.ok(new ApiResponse<>("Assigned hackathons fetched successfully", HttpStatus.OK, hackathons));
+        return ResponseEntity.ok(new ApiResponse<>("Assigned hackathons retrieved successfully", HttpStatus.OK, hackathons));
+    }
+
+    @PostMapping("/project/submit-scores")
+    public ResponseEntity<ApiResponse<Void>> submitScores(
+            @RequestBody JudgeScoreSubmissionRequestDTO dto,
+            Principal principal) {
+        judgeService.submitScores(dto, principal.getName());
+        return ResponseEntity.ok(new ApiResponse<>("Scores submitted successfully", HttpStatus.OK, null));
     }
 }
