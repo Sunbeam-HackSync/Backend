@@ -30,7 +30,7 @@ public class ParticipantsController {
         Page<HackathonDetailResponseDTO> hackathons = participantService.getDiscoveryFeed(page, size);
         return ResponseEntity.ok(new ApiResponse<>("Discovery feed fetched successfully", HttpStatus.OK, hackathons));
     }
-    /*Make this enpoint public */
+    /* Make this enpoint public */
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<HackathonDetailResponseDTO>> getHackathonById(@PathVariable Long id) {
@@ -41,8 +41,10 @@ public class ParticipantsController {
     @GetMapping("/hackathons/{id}/my-details")
     public ResponseEntity<ApiResponse<HackathonWithTeamDetailsResponseDTO>> getHackathonWithTeamDetails(
             @PathVariable Long id, Principal principal) {
-        HackathonWithTeamDetailsResponseDTO response = participantService.getHackathonWithTeamDetails(id, principal.getName());
-        return ResponseEntity.ok(new ApiResponse<>("Hackathon and team details fetched successfully", HttpStatus.OK, response));
+        HackathonWithTeamDetailsResponseDTO response = participantService.getHackathonWithTeamDetails(id,
+                principal.getName());
+        return ResponseEntity
+                .ok(new ApiResponse<>("Hackathon and team details fetched successfully", HttpStatus.OK, response));
     }
 
     @GetMapping("/my-hackathons")
@@ -139,10 +141,12 @@ public class ParticipantsController {
         return ResponseEntity.ok(new ApiResponse<>("Profile updated successfully", HttpStatus.OK, updatedProfile));
     }
 
-    @GetMapping("/tickets")
-    public ResponseEntity<ApiResponse<List<GetHelpTicketInfoDTO>>> getHelpTicket(@PathVariable Long hackathonId, @PathVariable Long TeamId, Principal principal){
+    @GetMapping("/tickets/{hackathonId}/{TeamId}")
+    public ResponseEntity<ApiResponse<List<GetHelpTicketInfoDTO>>> getHelpTicket(@PathVariable Long hackathonId,
+            @PathVariable Long TeamId, Principal principal) {
 
-        List<GetHelpTicketInfoDTO> helpTickets = helpTicketService.getTicketByTeamsAndHackathonId(hackathonId, TeamId, principal.getName());
+        List<GetHelpTicketInfoDTO> helpTickets = helpTicketService.getTicketByTeamsAndHackathonId(hackathonId, TeamId,
+                principal.getName());
         return ResponseEntity.ok(new ApiResponse<>("Help ticket fetched successfully", HttpStatus.OK, helpTickets));
     }
 }
