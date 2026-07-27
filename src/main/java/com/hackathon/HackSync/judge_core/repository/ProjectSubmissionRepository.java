@@ -1,5 +1,7 @@
 package com.hackathon.HackSync.judge_core.repository;
 
+import com.hackathon.HackSync.host_core.entity.Hackathons;
+import com.hackathon.HackSync.judge_core.entity.ProjectSubmissionStatus;
 import com.hackathon.HackSync.judge_core.entity.ProjectSubmissions;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -13,4 +15,6 @@ public interface ProjectSubmissionRepository extends JpaRepository<ProjectSubmis
     List<ProjectSubmissions> findByHackathonId(@Param("hackathonId") Long hackathonId);
 
     boolean existsByTeamsId(com.hackathon.HackSync.participants_core.entity.Teams teamsId);
+    
+    List<ProjectSubmissions> findByHackathonIdAndSubmissionStatus(Hackathons hackathon, ProjectSubmissionStatus status);
 }

@@ -18,6 +18,7 @@ import java.util.List;
 public class HackathonStatusScheduler {
 
     private final HackathonRepository hackathonRepository;
+    private final HackathonService hackathonService;
 
     /**
      * This scheduled task runs every minute to check if any APPROVED hackathons
@@ -62,6 +63,10 @@ public class HackathonStatusScheduler {
             for (Hackathons hackathon : hackathonsToEnd) {
                 hackathon.setHackathonStatus(HackathonStatus.COMPLETED);
                 hackathonRepository.save(hackathon);
+                
+                // Trigger auto-assignment of judges
+                hackathonService.assignJudgesToSubmissions(hackathon.getId());
+                
                 log.info("Hackathon '{}' (ID: {}) is now COMPLETED", hackathon.getTitle(), hackathon.getId());
             }
         }

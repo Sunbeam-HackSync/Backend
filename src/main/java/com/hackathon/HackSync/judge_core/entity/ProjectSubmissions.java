@@ -1,5 +1,6 @@
 package com.hackathon.HackSync.judge_core.entity;
 
+import com.hackathon.HackSync.auth.entity.Users;
 import com.hackathon.HackSync.host_core.entity.HackathonTracks;
 import com.hackathon.HackSync.host_core.entity.Hackathons;
 import com.hackathon.HackSync.participants_core.entity.Teams;
@@ -59,4 +60,8 @@ public class ProjectSubmissions extends BaseClass {
 
     @Column(name = "submitted_at")
     private LocalDateTime submittedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_judge_id")
+    private Users assignedJudgeId;
 }

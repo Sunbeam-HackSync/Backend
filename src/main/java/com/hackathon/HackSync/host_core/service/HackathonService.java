@@ -492,7 +492,34 @@ public class HackathonService {
         }
 
         hackathon.setHackathonStatus(HackathonStatus.PUBLISHED);
+
+        // Notify the all hackathon parcipants results are out on thier emails .
         hackathonRepository.save(hackathon);
+    }
+
+    public void assignJudgesToSubmissions(Long hackathonId) {
+        Hackathons hackathon = hackathonRepository.findById(hackathonId)
+                .orElseThrow(() -> new ResourceNotFoundException("Hackathon does not exists"));
+
+        // Get all submitted projects for this hackathon
+        List<ProjectSubmissions> submissions = projectSubmissionRepository.findByHackathonIdAndSubmissionStatus(hackathon, ProjectSubmissionStatus.SUBMITTED);
+        
+        // Get all accepted judges for this hackathon
+        List<HackathonJudges> acceptedJudges = hackathonJudgesRepository.findByHackathonsIdAndStatus(hackathon, JudgeInvitationStatus.ACCEPTED);
+
+        if (submissions.isEmpty() || acceptedJudges.isEmpty()) {
+            return;
+        }
+
+        // Round robin assignment
+        int judgeIndex = 0;
+        for (ProjectSubmissions submission : submissions) {
+            HackathonJudges judge = acceptedJudges.get(judgeIndex);
+            submission.setAssignedJudgeId(judge.getJudgeUserId());
+            projectSubmissionRepository.save(submission);
+            
+            judgeIndex = (judgeIndex + 1) % acceptedJudges.size();
+        }
     }
 
     public FileUploadResponse uploadImage(MultipartFile file) {

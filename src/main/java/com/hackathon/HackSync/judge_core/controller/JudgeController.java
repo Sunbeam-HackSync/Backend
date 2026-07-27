@@ -1,5 +1,7 @@
 package com.hackathon.HackSync.judge_core.controller;
 
+import com.hackathon.HackSync.judge_core.dto.AssignedHackathonResponseDTO;
+import com.hackathon.HackSync.judge_core.dto.WinnerSubmissionRequestDTO;
 import com.hackathon.HackSync.judge_core.service.JudgeService;
 import com.hackathon.HackSync.utils.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequestMapping("judge")
@@ -25,10 +28,18 @@ public class JudgeController {
         return ResponseEntity.ok(new ApiResponse<>(message, HttpStatus.OK, null));
     }
 
-    /*
-     * GET /judge/assignments - Fetches the clean queue of projects assigned to this
-     * specific judge where is_evaluated is FALSE.
-     * POST /judge/scores - Submits the numerical score_value and optional text
-     * feedback into the scores table, and flips the assignment flag to TRUE.
-     */
+    @PostMapping("/hackathon/{hackathonId}/submit-winners")
+    public ResponseEntity<ApiResponse<Void>> submitWinners(
+            @PathVariable Long hackathonId,
+            @RequestBody List<WinnerSubmissionRequestDTO> winners,
+            Principal principal) {
+        judgeService.submitWinners(hackathonId, winners, principal.getName());
+        return ResponseEntity.ok(new ApiResponse<>("Hackathon winners submitted successfully", HttpStatus.OK, null));
+    }
+
+    @GetMapping("/hackathons")
+    public ResponseEntity<ApiResponse<List<AssignedHackathonResponseDTO>>> getMyAssignedHackathons(Principal principal) {
+        List<AssignedHackathonResponseDTO> hackathons = judgeService.getMyAssignedHackathons(principal.getName());
+        return ResponseEntity.ok(new ApiResponse<>("Assigned hackathons fetched successfully", HttpStatus.OK, hackathons));
+    }
 }
