@@ -44,7 +44,8 @@ public class JudgeService {
         Users judge = userRepository.findByEmail(authenticatedEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("Judge not found"));
 
-        HackathonJudges hackathonJudge = hackathonJudgesRepository.findByHackathonsId_IdAndJudgeUserId_Id(hackathonId, judge.getId())
+        HackathonJudges hackathonJudge = hackathonJudgesRepository
+                .findByHackathonsId_IdAndJudgeUserId_Id(hackathonId, judge.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Hackathon judge invitation not found"));
 
         JudgeInvitationStatus status;
@@ -64,15 +65,16 @@ public class JudgeService {
         Users judge = userRepository.findByEmail(authenticatedEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("Judge not found"));
 
-        HackathonJudges hackathonJudge = hackathonJudgesRepository.findByHackathonsId_IdAndJudgeUserId_Id(hackathonId, judge.getId())
+        HackathonJudges hackathonJudge = hackathonJudgesRepository
+                .findByHackathonsId_IdAndJudgeUserId_Id(hackathonId, judge.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Hackathon judge invitation not found"));
 
-        if (!hackathonJudge.isSuperJudge()) {
+        if (!hackathonJudge.getIsSuperJudge()) {
             throw new AccessDeniedException("Access Denied: Only SUPER_JUDGE can submit winners");
         }
 
         Hackathons hackathon = hackathonJudge.getHackathonsId();
-        
+
         if (hackathon.getHackathonStatus() != HackathonStatus.COMPLETED) {
             throw new RuntimeException("Hackathon results are not yet completed");
         }
@@ -80,7 +82,8 @@ public class JudgeService {
         // Save each winner
         for (WinnerSubmissionRequestDTO winnerDto : winners) {
             ProjectSubmissions submission = projectSubmissionRepository.findById(winnerDto.getSubmissionId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Submission not found: " + winnerDto.getSubmissionId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Submission not found: " + winnerDto.getSubmissionId()));
 
             if (!submission.getHackathonId().getId().equals(hackathonId)) {
                 throw new RuntimeException("Submission does not belong to this hackathon");
@@ -90,7 +93,7 @@ public class JudgeService {
             winner.setHackathonId(hackathon);
             winner.setSubmissionId(submission);
             winner.setCategoryName(winnerDto.getCategoryName());
-            
+
             hackathonWinnersRepository.save(winner);
         }
     }
@@ -111,7 +114,7 @@ public class JudgeService {
                     .hackathonStarts(hackathon.getHackathonStart())
                     .hackathonEnds(hackathon.getHackathonEnd())
                     .invitationStatus(assignment.getStatus())
-                    .isSuperJudge(assignment.isSuperJudge())
+                    .isSuperJudge(assignment.getIsSuperJudge() != null ? assignment.getIsSuperJudge() : false)
                     .build();
         }).toList();
     }
@@ -136,7 +139,8 @@ public class JudgeService {
 
         for (JudgeScoreSubmissionRequestDTO.ScoreEntryDTO scoreEntry : dto.getScores()) {
             EvaluationCriteria criteria = evaluationCriteriaRepository.findById(scoreEntry.getCriteriaId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Evaluation criteria not found: " + scoreEntry.getCriteriaId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Evaluation criteria not found: " + scoreEntry.getCriteriaId()));
 
             JudgesScores judgesScore = new JudgesScores();
             judgesScore.setJudgeId(judge);
@@ -144,7 +148,7 @@ public class JudgeService {
             judgesScore.setCriteriaId(criteria);
             judgesScore.setScoreGiven(scoreEntry.getScoreGiven());
             judgesScore.setFeedBackNotes(scoreEntry.getFeedbackNotes());
-            
+
             judgesScoresRepository.save(judgesScore);
         }
     }

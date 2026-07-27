@@ -3,6 +3,7 @@ package com.hackathon.HackSync.host_core.service;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.hackathon.HackSync.admin_core.entity.HackathonReviews;
 import com.hackathon.HackSync.admin_core.repository.HackathonReviewsRepository;
 import com.hackathon.HackSync.auth.entity.ROLE;
 import com.hackathon.HackSync.auth.entity.Users;
@@ -215,7 +216,7 @@ public class HackathonService {
         String feedbackNotes = null;
         if (savedHackathon.getHackathonStatus() == HackathonStatus.REJECTED) {
             feedbackNotes = hackathonReviewsRepository.findByHackathonId(savedHackathon)
-                    .map(com.hackathon.HackSync.admin_core.entity.HackathonReviews::getFeedbackNotes)
+                    .map(HackathonReviews::getFeedbackNotes)
                     .orElse(null);
         }
 
@@ -229,8 +230,8 @@ public class HackathonService {
                 .feedBackNotes(feedbackNotes)
                 .build();
     }
-
-    public List<HackathonFullDetailResponseDTO> getMyHackathons(String authenticatedEmail) {
+    
+    public List<HackathonResponse> getMyHackathons(String authenticatedEmail) {
         Users user = userRepository.findByEmail(authenticatedEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User does not exists"));
 
@@ -243,7 +244,35 @@ public class HackathonService {
             String feedbackNotes = null;
             if (h.getHackathonStatus() == HackathonStatus.REJECTED) {
                 feedbackNotes = hackathonReviewsRepository.findByHackathonId(h)
-                        .map(com.hackathon.HackSync.admin_core.entity.HackathonReviews::getFeedbackNotes)
+                        .map(HackathonReviews::getFeedbackNotes)
+                        .orElse(null);
+            }
+            return HackathonResponse.builder()
+                    .id(h.getId())
+                    .title(h.getTitle())
+                    .tagline(h.getTagline())
+                    .hackathonStatus(h.getHackathonStatus())
+                    .hackathonStarts(h.getHackathonStart())
+                    .hackathonEnds(h.getHackathonEnd())
+                    .feedBackNotes(feedbackNotes)
+                    .build();
+        }).toList();
+    }
+
+    public List<HackathonFullDetailResponseDTO> getMyHackathonsDetails(String authenticatedEmail) {
+        Users user = userRepository.findByEmail(authenticatedEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User does not exists"));
+
+        if (!user.getRole().equals(ROLE.HOST) && !user.getRole().equals(ROLE.ADMIN)) {
+            throw new AccessDeniedException("Access Denied: Only HOSTs can view their hackathons");
+        }
+
+        List<Hackathons> hackathons = hackathonRepository.findByHostId(user);
+        return hackathons.stream().map(h -> {
+            String feedbackNotes = null;
+            if (h.getHackathonStatus() == HackathonStatus.REJECTED) {
+                feedbackNotes = hackathonReviewsRepository.findByHackathonId(h)
+                        .map(HackathonReviews::getFeedbackNotes)
                         .orElse(null);
             }
 
@@ -255,7 +284,7 @@ public class HackathonService {
                     .map(entry -> TeamWithParticipantsResponseDTO.builder()
                             .teamId(entry.getKey().getId())
                             .teamName(entry.getKey().getTeamName())
-                            .participants(entry.getValue().stream().map(m -> com.hackathon.HackSync.participants_core.dto.ParticipantResponseDTO.builder()
+                            .participants(entry.getValue().stream().map(m -> ParticipantResponseDTO.builder()
                                     .userId(m.getUserId().getId())
                                     .email(m.getUserId().getEmail())
                                     .teamId(m.getTeamsId().getId())
@@ -272,7 +301,7 @@ public class HackathonService {
                     .userId(j.getJudgeUserId().getId())
                     .email(j.getJudgeUserId().getEmail())
                     .status(j.getStatus())
-                    .isSuperJudge(j.isSuperJudge())
+                    .isSuperJudge(j.getIsSuperJudge() != null ? j.getIsSuperJudge() : false)
                     .assignedAt(j.getAssignedAt())
                     .build()).toList();
 
@@ -481,7 +510,7 @@ public class HackathonService {
                 .findByHackathonsId_IdAndJudgeUserId_Id(hackathonId, judgeUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Judge is not assigned to this hackathon"));
 
-        hackathonJudge.setSuperJudge(true);
+        hackathonJudge.setIsSuperJudge(true);
         hackathonJudgesRepository.save(hackathonJudge);
     }
 

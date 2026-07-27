@@ -65,11 +65,21 @@ public class HackathonController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse<List<HackathonFullDetailResponseDTO>>> getMyHackathons(Principal principal) {
+    public ResponseEntity<ApiResponse<List<HackathonResponse>>> getMyHackathons(Principal principal) {
         String email = principal.getName();
-        List<HackathonFullDetailResponseDTO> hackathons = hackathonService.getMyHackathons(email);
+        List<HackathonResponse> hackathons = hackathonService.getMyHackathons(email);
         return new ResponseEntity<>(
                 new ApiResponse<>("Fetched your hackathons successfully", HttpStatus.OK, hackathons), HttpStatus.OK);
+    }
+
+    @GetMapping("me/hackathons/details")
+    public ResponseEntity<ApiResponse<List<HackathonFullDetailResponseDTO>>> getMyHackathonDetails(
+            Principal principal) {
+        String email = principal.getName();
+        List<HackathonFullDetailResponseDTO> hackathons = hackathonService.getMyHackathonsDetails(email);
+        return new ResponseEntity<>(
+                new ApiResponse<>("Fetched your hackathons details successfully", HttpStatus.OK, hackathons),
+                HttpStatus.OK);
     }
 
     @GetMapping("/hackathon/{id}/participants")
@@ -123,6 +133,7 @@ public class HackathonController {
         FileUploadResponse response = hackathonService.uploadImage(file);
         return new ResponseEntity<>(Map.of("fileId", response.fileId(), "url", response.url()), HttpStatus.OK);
     }
+
     @PostMapping("/hackathon/{id}/evaluation-criteria")
     public ResponseEntity<ApiResponse<EvaluationCriteriaResponseDTO>> createEvaluationCriteria(
             @PathVariable Long id,
@@ -130,21 +141,28 @@ public class HackathonController {
             Principal principal) {
         String email = principal.getName();
         EvaluationCriteriaResponseDTO response = hackathonService.createEvaluationCriteria(id, requestDTO, email);
-        return new ResponseEntity<>(new ApiResponse<>("Evaluation criteria created successfully", HttpStatus.CREATED, response), HttpStatus.CREATED);
+        return new ResponseEntity<>(
+                new ApiResponse<>("Evaluation criteria created successfully", HttpStatus.CREATED, response),
+                HttpStatus.CREATED);
     }
 
     @PutMapping("/hackathon/{id}/evaluation-criteria/{criteriaId}")
-    public ResponseEntity<ApiResponse<EvaluationCriteriaResponseDTO>> updateEvaluationCriteria(@PathVariable Long id, @PathVariable Long criteriaId, @RequestBody EvaluationCriteriaRequestDTO requestDTO, Principal principal) {
+    public ResponseEntity<ApiResponse<EvaluationCriteriaResponseDTO>> updateEvaluationCriteria(@PathVariable Long id,
+            @PathVariable Long criteriaId, @RequestBody EvaluationCriteriaRequestDTO requestDTO, Principal principal) {
         String email = principal.getName();
-        EvaluationCriteriaResponseDTO response = hackathonService.updateEvaluationCriteria(id, criteriaId, requestDTO, email);
-        return new ResponseEntity<>(new ApiResponse<>("Evaluation criteria updated successfully", HttpStatus.OK, response), HttpStatus.OK);
+        EvaluationCriteriaResponseDTO response = hackathonService.updateEvaluationCriteria(id, criteriaId, requestDTO,
+                email);
+        return new ResponseEntity<>(
+                new ApiResponse<>("Evaluation criteria updated successfully", HttpStatus.OK, response), HttpStatus.OK);
     }
 
     @PutMapping("/hackathon/{id}/submissions/{submissionId}/disqualify")
-    public ResponseEntity<ApiResponse<ProjectSubmissionResponseDTO>> disqualifySubmission(@PathVariable Long id, @PathVariable Long submissionId, Principal principal){
+    public ResponseEntity<ApiResponse<ProjectSubmissionResponseDTO>> disqualifySubmission(@PathVariable Long id,
+            @PathVariable Long submissionId, Principal principal) {
         String email = principal.getName();
         ProjectSubmissionResponseDTO response = hackathonService.disqualifySubmission(id, submissionId, email);
-        return new ResponseEntity<>(new ApiResponse<>("Submission disqualified successfully", HttpStatus.OK, response), HttpStatus.OK);
+        return new ResponseEntity<>(new ApiResponse<>("Submission disqualified successfully", HttpStatus.OK, response),
+                HttpStatus.OK);
     }
 
     @PutMapping("/hackathon/{id}/judges/{judgeUserId}/assign-super-judge")
@@ -154,7 +172,8 @@ public class HackathonController {
             Principal principal) {
         String email = principal.getName();
         hackathonService.assignSuperJudge(id, judgeUserId, email);
-        return new ResponseEntity<>(new ApiResponse<>("Super judge assigned successfully", HttpStatus.OK, null), HttpStatus.OK);
+        return new ResponseEntity<>(new ApiResponse<>("Super judge assigned successfully", HttpStatus.OK, null),
+                HttpStatus.OK);
     }
 
 }

@@ -36,6 +36,6 @@ public class HackathonJudges extends BaseClass {
     private JudgeInvitationStatus status;
 
     @Column(name = "is_super_judge")
-    private boolean isSuperJudge = false;
+    private Boolean isSuperJudge = false;
 
 }

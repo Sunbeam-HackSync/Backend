@@ -13,6 +13,6 @@ public class JudgeResponseDTO {
     private Long userId;
     private String email;
     private JudgeInvitationStatus status;
-    private boolean isSuperJudge;
+    private Boolean isSuperJudge;
     private LocalDateTime assignedAt;
 }
