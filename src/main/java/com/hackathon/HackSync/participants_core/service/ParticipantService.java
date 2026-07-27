@@ -454,6 +454,11 @@ public class ParticipantService {
 
                 Hackathons hackathon = team.getHackathonId();
 
+                // Check the status of hackathon should be active
+                if (hackathon.getHackathonStatus() != HackathonStatus.ACTIVE) {
+                        throw new RuntimeException("Submissions are not allowed at this time for this hackathon");
+                }
+
                 ProjectSubmissions submission = new ProjectSubmissions();
                 submission.setTeamsId(team);
                 submission.setHackathonId(hackathon);
