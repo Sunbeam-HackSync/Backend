@@ -697,4 +697,30 @@ public class HackathonService {
                 .submittedAt(submission.getSubmittedAt())
                 .build();
     }
+    public List<EvaluationCriteriaResponseDTO> getEvaluationCriteria(Long hackathonId, String authenticatedEmail) {
+        Users host = userRepository.findByEmail(authenticatedEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User does not exists"));
+        Hackathons hackathon = hackathonRepository.findById(hackathonId)
+                .orElseThrow(() -> new ResourceNotFoundException("Hackathon does not exists"));
+
+        if (!host.getRole().equals(ROLE.ADMIN)) {
+            if (host.getRole().equals(ROLE.HOST)) {
+                if (!hackathon.getHostId().getId().equals(host.getId())) {
+                    throw new AccessDeniedException("Access Denied: You are not the creator of this hackathon");
+                }
+            } else {
+                throw new AccessDeniedException("Access Denied: Only HOSTs or ADMINs can view evaluation criteria");
+            }
+        }
+
+        List<EvaluationCriteria> criteriaList = evaluationCriteriaRepository.findByHackathonId_Id(hackathonId);
+
+        return criteriaList.stream().map(criteria -> EvaluationCriteriaResponseDTO.builder()
+                .id(criteria.getId())
+                .hackathonId(criteria.getHackathonId().getId())
+                .criteriaName(criteria.getCriteriaName())
+                .description(criteria.getDescription())
+                .maxScore(criteria.getMaxScore())
+                .build()).toList();
+    }
 }

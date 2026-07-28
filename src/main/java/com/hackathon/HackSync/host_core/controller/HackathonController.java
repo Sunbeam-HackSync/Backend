@@ -107,7 +107,7 @@ public class HackathonController {
             @RequestBody InviteRequestDTO requestDTO) {
         String email = principal.getName();
         hackathonService.inviteJudge(id, requestDTO, email);
-        return new ResponseEntity<>(new ApiResponse<>("Judge added successfully", HttpStatus.OK, null), HttpStatus.OK);
+        return new ResponseEntity<>(new ApiResponse<>("Judge invited successfully", HttpStatus.OK, null), HttpStatus.OK);
     }
 
     @PostMapping("/hackathon/{id}/mentors")
@@ -115,7 +115,7 @@ public class HackathonController {
             @RequestBody InviteRequestDTO requestDTO) {
         String email = principal.getName();
         hackathonService.inviteMentor(id, requestDTO, email);
-        return new ResponseEntity<>(new ApiResponse<>("Mentor added successfully", HttpStatus.OK, null), HttpStatus.OK);
+        return new ResponseEntity<>(new ApiResponse<>("Mentor invited successfully", HttpStatus.OK, null), HttpStatus.OK);
     }
 
     @PutMapping("/hackathon/{id}/publish")
@@ -162,6 +162,17 @@ public class HackathonController {
         String email = principal.getName();
         ProjectSubmissionResponseDTO response = hackathonService.disqualifySubmission(id, submissionId, email);
         return new ResponseEntity<>(new ApiResponse<>("Submission disqualified successfully", HttpStatus.OK, response),
+                HttpStatus.OK);
+    }
+
+    @GetMapping("/hackathon/{id}/criteria")
+    public ResponseEntity<ApiResponse<List<EvaluationCriteriaResponseDTO>>> getEvaluationCriteria(
+            @PathVariable Long id,
+            Principal principal) {
+        String email = principal.getName();
+        List<EvaluationCriteriaResponseDTO> criteria = hackathonService.getEvaluationCriteria(id, email);
+        return new ResponseEntity<>(
+                new ApiResponse<>("Evaluation criteria retrieved successfully", HttpStatus.OK, criteria),
                 HttpStatus.OK);
     }
 
