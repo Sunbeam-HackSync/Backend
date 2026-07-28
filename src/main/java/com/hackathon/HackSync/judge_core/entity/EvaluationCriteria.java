@@ -29,5 +29,7 @@ public class EvaluationCriteria extends BaseClass {
     private int maxScore;
 }
 /*
-    The evaluation criteria would be like the presentation skills, innovation , implementation and some other things that are provided by the host
+    The evaluation criteria would be like the 
+    presentation skills, innovation , 
+    implementation and some other things that are provided by the host
 */

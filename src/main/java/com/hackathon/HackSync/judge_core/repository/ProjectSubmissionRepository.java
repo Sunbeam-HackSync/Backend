@@ -22,4 +22,6 @@ public interface ProjectSubmissionRepository extends JpaRepository<ProjectSubmis
     Optional<ProjectSubmissions> findByTeamsId(Teams teamsId);
     
     List<ProjectSubmissions> findByHackathonIdAndSubmissionStatus(Hackathons hackathon, ProjectSubmissionStatus status);
+    
+    List<ProjectSubmissions> findByHackathonId_IdAndAssignedJudgeId_Id(Long hackathonId, Long assignedJudgeId);
 }

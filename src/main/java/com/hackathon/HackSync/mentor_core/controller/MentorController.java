@@ -2,6 +2,7 @@ package com.hackathon.HackSync.mentor_core.controller;
 
 import com.hackathon.HackSync.mentor_core.dto.MeetingRequestDTO;
 import com.hackathon.HackSync.mentor_core.dto.MeetingResponseDTO;
+import com.hackathon.HackSync.mentor_core.dto.MentorAssignedHackathonResponseDTO;
 import com.hackathon.HackSync.mentor_core.dto.MentorTicketResponseDTO;
 import com.hackathon.HackSync.mentor_core.service.MeetingService;
 import com.hackathon.HackSync.mentor_core.service.MentorService;
@@ -63,4 +64,10 @@ public class MentorController {
         return ResponseEntity.ok(new ApiResponse<>(message, HttpStatus.OK, null));
     }
 
+    @GetMapping("/hackathons")
+    public ResponseEntity<ApiResponse<List<MentorAssignedHackathonResponseDTO>>> getMyAssignedHackathons(
+            Principal principal) {
+        List<MentorAssignedHackathonResponseDTO> hackathons = mentorService.getMyAssignedHackathons(principal.getName());
+        return ResponseEntity.ok(new ApiResponse<>("Assigned hackathons retrieved successfully", HttpStatus.OK, hackathons));
+    }
 }

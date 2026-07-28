@@ -2,6 +2,7 @@ package com.hackathon.HackSync.mentor_core.service;
 
 import com.hackathon.HackSync.auth.entity.Users;
 import com.hackathon.HackSync.auth.repository.UserRepository;
+import com.hackathon.HackSync.host_core.entity.Hackathons;
 import com.hackathon.HackSync.mentor_core.dto.MentorTicketResponseDTO;
 import com.hackathon.HackSync.mentor_core.entity.HelpTickets;
 import com.hackathon.HackSync.mentor_core.entity.TicketStatus;
@@ -12,6 +13,7 @@ import com.hackathon.HackSync.mentor_core.entity.MentorStatus;
 import com.hackathon.HackSync.utils.exception.ResourceNotFoundException;
 import com.hackathon.HackSync.mentor_core.dto.MeetingRequestDTO;
 import com.hackathon.HackSync.mentor_core.dto.MeetingResponseDTO;
+import com.hackathon.HackSync.mentor_core.dto.MentorAssignedHackathonResponseDTO;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -144,5 +146,25 @@ public class MentorService {
         hackathonsMentorsRepository.save(hackathonMentor);
 
         return "Invitation status updated to " + status.name();
+    }
+
+    public List<MentorAssignedHackathonResponseDTO> getMyAssignedHackathons(String authenticatedEmail) {
+        Users mentor = userRepository.findByEmail(authenticatedEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("Mentor not found"));
+
+        List<HackathonsMentors> assignments = hackathonsMentorsRepository.findByMentorsId_Id(mentor.getId());
+
+        return assignments.stream().map(assignment -> {
+            Hackathons hackathon = assignment.getHackathonId();
+            return MentorAssignedHackathonResponseDTO.builder()
+                    .hackathonId(hackathon.getId())
+                    .title(hackathon.getTitle())
+                    .tagline(hackathon.getTagline())
+                    .hackathonStatus(hackathon.getHackathonStatus())
+                    .hackathonStarts(hackathon.getHackathonStart())
+                    .hackathonEnds(hackathon.getHackathonEnd())
+                    .invitationStatus(assignment.getStatus())
+                    .build();
+        }).toList();
     }
 }

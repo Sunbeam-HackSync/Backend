@@ -3,6 +3,8 @@ package com.hackathon.HackSync.host_core.service;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.management.RuntimeErrorException;
+
 import com.hackathon.HackSync.admin_core.entity.HackathonReviews;
 import com.hackathon.HackSync.admin_core.repository.HackathonReviewsRepository;
 import com.hackathon.HackSync.auth.entity.ROLE;
@@ -230,7 +232,7 @@ public class HackathonService {
                 .feedBackNotes(feedbackNotes)
                 .build();
     }
-    
+
     public List<HackathonResponse> getMyHackathons(String authenticatedEmail) {
         Users user = userRepository.findByEmail(authenticatedEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User does not exists"));
@@ -317,18 +319,20 @@ public class HackathonService {
 
             // Submissions
             List<ProjectSubmissions> submissions = projectSubmissionRepository.findByHackathonId(h.getId());
-            List<ProjectSubmissionResponseDTO> submissionDTOs = submissions.stream().map(s -> ProjectSubmissionResponseDTO.builder()
-                    .id(s.getId())
-                    .projectTitle(s.getProjectTitle())
-                    .tagLine(s.getTagLine())
-                    .description(s.getDescription())
-                    .githubRepoUrl(s.getGithubRepoUrl())
-                    .liveDemoUrl(s.getLiveDemoUrl())
-                    .submissionStatus(s.getSubmissionStatus())
-                    .teamId(s.getTeamsId().getId())
-                    .teamName(s.getTeamsId().getTeamName())
-                    .submittedAt(s.getSubmittedAt())
-                    .build()).toList();
+            List<ProjectSubmissionResponseDTO> submissionDTOs = submissions.stream()
+                    .map(s -> ProjectSubmissionResponseDTO.builder()
+                            .id(s.getId())
+                            .projectTitle(s.getProjectTitle())
+                            .tagLine(s.getTagLine())
+                            .description(s.getDescription())
+                            .githubRepoUrl(s.getGithubRepoUrl())
+                            .liveDemoUrl(s.getLiveDemoUrl())
+                            .submissionStatus(s.getSubmissionStatus())
+                            .teamId(s.getTeamsId().getId())
+                            .teamName(s.getTeamsId().getTeamName())
+                            .submittedAt(s.getSubmittedAt())
+                            .build())
+                    .toList();
 
             return HackathonFullDetailResponseDTO.builder()
                     .id(h.getId())
@@ -429,15 +433,8 @@ public class HackathonService {
             }
         }
 
-        Users judgeUser = userRepository.findByEmail(inviteRequestDTO.getEmail()).orElse(null);
-        if (judgeUser == null) {
-            judgeUser = new Users();
-            judgeUser.setEmail(inviteRequestDTO.getEmail());
-            judgeUser.setPassword_hash(passwordEncoder.encode(UUID.randomUUID().toString()));
-            judgeUser.setRole(ROLE.JUDGE);
-            judgeUser.setEmailVerified(false);
-            judgeUser = userRepository.save(judgeUser);
-        }
+        Users judgeUser = userRepository.findByEmail(inviteRequestDTO.getEmail())
+                .orElseThrow(() -> new RuntimeException("Judge is not registered on the platform"));
 
         HackathonJudges hackathonJudge = new HackathonJudges();
         hackathonJudge.setHackathonsId(hackathon);
@@ -470,15 +467,16 @@ public class HackathonService {
                 || hackathon.getHackathonStatus() == HackathonStatus.REJECTED) {
             throw new RuntimeException("Hackathon result is already published or Hackathon is rejected");
         }
-        Users mentorUser = userRepository.findByEmail(inviteRequestDTO.getEmail()).orElse(null);
-        if (mentorUser == null) {
-            mentorUser = new Users();
-            mentorUser.setEmail(inviteRequestDTO.getEmail());
-            mentorUser.setPassword_hash(passwordEncoder.encode(UUID.randomUUID().toString()));
-            mentorUser.setRole(ROLE.MENTOR);
-            mentorUser.setEmailVerified(false);
-            mentorUser = userRepository.save(mentorUser);
-        }
+        Users mentorUser = userRepository.findByEmail(inviteRequestDTO.getEmail())
+                .orElseThrow(() -> new RuntimeException("Mentor is not registered on the platform"));
+        // if (mentorUser == null) {
+        // mentorUser = new Users();
+        // mentorUser.setEmail(inviteRequestDTO.getEmail());
+        // mentorUser.setPassword_hash(passwordEncoder.encode(UUID.randomUUID().toString()));
+        // mentorUser.setRole(ROLE.MENTOR);
+        // mentorUser.setEmailVerified(false);
+        // mentorUser = userRepository.save(mentorUser);
+        // }
 
         HackathonsMentors hackathonMentor = new HackathonsMentors();
         hackathonMentor.setHackathonId(hackathon);
@@ -519,7 +517,7 @@ public class HackathonService {
     // PUBLISHED once the results are published by the judges after evaluating all
     // the teams submissions.
     /*
-        check this
+     * check this
      */
     public void publishHackathonResults(Long hackathonId, String authenticatedEmail) {
         Users host = userRepository.findByEmail(authenticatedEmail)

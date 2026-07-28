@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Getter
 @Setter
-@ToString(callSuper = true, exclude = {"hackathonsId", "judgeUserId", "tracksId"})
+@ToString(callSuper = true, exclude = {"hackathonsId", "judgeUserId"})
 @AttributeOverride(name = "id", column = @Column(name = "hackathon_judge_id"))
 @Table(name = "hackathon_judges")
 public class HackathonJudges extends BaseClass {
@@ -23,10 +23,6 @@ public class HackathonJudges extends BaseClass {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "judge_user_id", nullable = false)
     private Users judgeUserId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "track_id")
-    private HackathonTracks tracksId;
 
     @Column(name = "assigned_at")
     private LocalDateTime assignedAt;

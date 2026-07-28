@@ -100,8 +100,8 @@ public class AdminService {
                 String feedbackNotes = null;
                 if (hackathon.getHackathonStatus() == HackathonStatus.REJECTED) {
                         feedbackNotes = hackathonReviewsRepository.findByHackathonId(hackathon)
-                                .map(HackathonReviews::getFeedbackNotes)
-                                .orElse(null);
+                                        .map(HackathonReviews::getFeedbackNotes)
+                                        .orElse(null);
                 }
 
                 return HackathonDetailResponseDTO.builder()
@@ -119,6 +119,9 @@ public class AdminService {
                                 .hackathonEnd(hackathon.getHackathonEnd())
                                 .hackathonStatus(hackathon.getHackathonStatus())
                                 .feedBackNotes(feedbackNotes)
+                                .faq(hackathon.getFaq())
+                                .rules(hackathon.getRules())
+                                .resultDeclarationDate(hackathon.getResultDeclarationDate())
                                 .build();
         }
 }
