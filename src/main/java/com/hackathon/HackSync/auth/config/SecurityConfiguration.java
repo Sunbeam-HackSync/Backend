@@ -42,6 +42,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/host/**").hasAnyRole("HOST", "ADMIN")
                         .requestMatchers("/judge/**").hasAnyRole("JUDGE", "ADMIN")
                         .requestMatchers("/mentor/**").hasAnyRole("MENTOR", "ADMIN")
+                        .requestMatchers("/participants/profile").authenticated()
                         .requestMatchers("/participants/**").hasAnyRole("PARTICIPANT", "HOST", "ADMIN")
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

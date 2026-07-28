@@ -5,6 +5,7 @@ import com.hackathon.HackSync.judge_core.dto.EvaluationCriteriaResponseDTO;
 import com.hackathon.HackSync.judge_core.dto.JudgeDetailHackathonResponseDTO;
 import com.hackathon.HackSync.judge_core.dto.JudgeScoreSubmissionRequestDTO;
 import com.hackathon.HackSync.judge_core.dto.ProjectSubmissionResponseDTO;
+import com.hackathon.HackSync.judge_core.dto.SuperJudgeSubmissionResponseDTO;
 import com.hackathon.HackSync.judge_core.dto.WinnerSubmissionRequestDTO;
 import com.hackathon.HackSync.judge_core.service.JudgeService;
 import com.hackathon.HackSync.participants_core.dto.HackathonDetailResponseDTO;
@@ -84,11 +85,11 @@ public class JudgeController {
         }
 
         @GetMapping("/hackathon/{hackathonId}/all-submissions")
-        public ResponseEntity<ApiResponse<List<ProjectSubmissionResponseDTO>>> getAllSubmissions(
+        public ResponseEntity<ApiResponse<List<SuperJudgeSubmissionResponseDTO>>> getAllSubmissions(
                         @PathVariable Long hackathonId,
                         @RequestParam(required = false) String search,
                         Principal principal) {
-                List<ProjectSubmissionResponseDTO> submissions = judgeService.getAllSubmissionsForSuperJudge(
+                List<SuperJudgeSubmissionResponseDTO> submissions = judgeService.getAllSubmissionsForSuperJudge(
                                 hackathonId, search,
                                 principal.getName());
                 return ResponseEntity

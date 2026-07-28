@@ -488,7 +488,7 @@ public class HackathonService {
         emailService.sendInvitationEmail(inviteRequestDTO.getEmail(), ROLE.MENTOR, hackathon.getTitle());
     }
 
-    public void assignSuperJudge(Long hackathonId, Long judgeUserId, String authenticatedEmail) {
+    public void assignSuperJudge(Long hackathonId, String judgeEmail, String authenticatedEmail) {
         Users host = userRepository.findByEmail(authenticatedEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User does not exists"));
         Hackathons hackathon = hackathonRepository.findById(hackathonId)
@@ -504,8 +504,11 @@ public class HackathonService {
             }
         }
 
+        Users judgeUser = userRepository.findByEmail(judgeEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Judge user does not exists with email: " + judgeEmail));
+
         HackathonJudges hackathonJudge = hackathonJudgesRepository
-                .findByHackathonsId_IdAndJudgeUserId_Id(hackathonId, judgeUserId)
+                .findByHackathonsId_IdAndJudgeUserId_Id(hackathonId, judgeUser.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Judge is not assigned to this hackathon"));
 
         hackathonJudge.setIsSuperJudge(true);

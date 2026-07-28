@@ -17,5 +17,5 @@ public class AssignedHackathonResponseDTO {
     private LocalDateTime hackathonStarts;
     private LocalDateTime hackathonEnds;
     private JudgeInvitationStatus invitationStatus;
-    private boolean isSuperJudge;
+    private Boolean isSuperJudge;
 }

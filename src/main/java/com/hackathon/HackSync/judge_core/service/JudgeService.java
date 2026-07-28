@@ -22,11 +22,13 @@ import com.hackathon.HackSync.judge_core.entity.EvaluationCriteria;
 import com.hackathon.HackSync.judge_core.entity.JudgesScores;
 import com.hackathon.HackSync.judge_core.dto.JudgeScoreSubmissionRequestDTO;
 import com.hackathon.HackSync.judge_core.dto.ProjectSubmissionResponseDTO;
+import com.hackathon.HackSync.judge_core.dto.SuperJudgeSubmissionResponseDTO;
 import com.hackathon.HackSync.judge_core.repository.EvaluationCriteriaRepository;
 import com.hackathon.HackSync.judge_core.repository.JudgesScoresRepository;
 import com.hackathon.HackSync.host_core.repository.HackathonRepository;
 import com.hackathon.HackSync.participants_core.dto.HackathonDetailResponseDTO;
 
+import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -199,21 +201,26 @@ public class JudgeService {
                 List<ProjectSubmissions> submissions = projectSubmissionRepository
                                 .findByHackathonId_IdAndAssignedJudgeId_Id(hackathonId, judge.getId());
 
-                return submissions.stream().map(submission -> ProjectSubmissionResponseDTO.builder()
+                return submissions.stream().map(submission -> {
+                        boolean isEvaluated = judgesScoresRepository.existsByProjectId_IdAndJudgeId_Id(submission.getId(), judge.getId());
+                        return ProjectSubmissionResponseDTO.builder()
                                 .id(submission.getId())
                                 .projectTitle(submission.getProjectTitle())
                                 .tagLine(submission.getTagLine())
                                 .description(submission.getDescription())
                                 .githubRepoUrl(submission.getGithubRepoUrl())
                                 .liveDemoUrl(submission.getLiveDemoUrl())
+                                .youtubeUrl(submission.getYoutubeUrl())
                                 .submissionStatus(submission.getSubmissionStatus())
                                 .teamId(submission.getTeamsId().getId())
                                 .teamName(submission.getTeamsId().getTeamName())
                                 .submittedAt(submission.getSubmittedAt())
-                                .build()).toList();
+                                .isEvaluated(isEvaluated)
+                                .build();
+                }).toList();
         }
 
-        public List<ProjectSubmissionResponseDTO> getAllSubmissionsForSuperJudge(Long hackathonId, String search,
+        public List<SuperJudgeSubmissionResponseDTO> getAllSubmissionsForSuperJudge(Long hackathonId, String search,
                         String authenticatedEmail) {
                 Users judge = userRepository.findByEmail(authenticatedEmail)
                                 .orElseThrow(() -> new UsernameNotFoundException("Judge not found"));
@@ -243,18 +250,66 @@ public class JudgeService {
                                         .toList();
                 }
 
-                return submissions.stream().map(submission -> ProjectSubmissionResponseDTO.builder()
+                return submissions.stream().map(submission -> {
+                        boolean isEvaluated = judgesScoresRepository.existsByProjectId_IdAndJudgeId_Id(submission.getId(), judge.getId());
+                        ProjectSubmissionResponseDTO submissionDTO = ProjectSubmissionResponseDTO.builder()
                                 .id(submission.getId())
                                 .projectTitle(submission.getProjectTitle())
                                 .tagLine(submission.getTagLine())
                                 .description(submission.getDescription())
                                 .githubRepoUrl(submission.getGithubRepoUrl())
                                 .liveDemoUrl(submission.getLiveDemoUrl())
+                                .youtubeUrl(submission.getYoutubeUrl())
                                 .submissionStatus(submission.getSubmissionStatus())
                                 .teamId(submission.getTeamsId().getId())
                                 .teamName(submission.getTeamsId().getTeamName())
                                 .submittedAt(submission.getSubmittedAt())
-                                .build()).toList();
+                                .isEvaluated(isEvaluated)
+                                .build();
+
+                        List<JudgesScores> scores = judgesScoresRepository.findByProjectId_Id(submission.getId());
+                        
+                        java.util.Map<Users, List<JudgesScores>> groupedScores = scores.stream()
+                                .collect(java.util.stream.Collectors.groupingBy(JudgesScores::getJudgeId));
+
+                        List<SuperJudgeSubmissionResponseDTO.JudgeEvaluationDTO> evaluations = new java.util.ArrayList<>();
+                        double totalSubmissionScore = 0;
+
+                        for (java.util.Map.Entry<Users, List<JudgesScores>> entry : groupedScores.entrySet()) {
+                                Users evalJudge = entry.getKey();
+                                List<JudgesScores> judgeScores = entry.getValue();
+
+                                List<SuperJudgeSubmissionResponseDTO.ScoreDetailDTO> scoreDetails = new java.util.ArrayList<>();
+                                double judgeTotal = 0;
+                                
+                                for (JudgesScores js : judgeScores) {
+                                        scoreDetails.add(SuperJudgeSubmissionResponseDTO.ScoreDetailDTO.builder()
+                                                .criteriaId(js.getCriteriaId().getId())
+                                                .criteriaName(js.getCriteriaId().getCriteriaName())
+                                                .maxScore(js.getCriteriaId().getMaxScore())
+                                                .scoreGiven(js.getScoreGiven())
+                                                .feedbackNotes(js.getFeedBackNotes())
+                                                .build());
+                                        judgeTotal += js.getScoreGiven();
+                                }
+
+                                evaluations.add(SuperJudgeSubmissionResponseDTO.JudgeEvaluationDTO.builder()
+                                        .judgeId(evalJudge.getId())
+                                        .judgeEmail(evalJudge.getEmail())
+                                        .scoreDetails(scoreDetails)
+                                        .judgeTotalScore(judgeTotal)
+                                        .build());
+                                
+                                totalSubmissionScore += judgeTotal;
+                        }
+
+                        return SuperJudgeSubmissionResponseDTO.builder()
+                                .submission(submissionDTO)
+                                .evaluations(evaluations)
+                                .totalScore(totalSubmissionScore)
+                                .build();
+                }).sorted(Comparator.comparingDouble(SuperJudgeSubmissionResponseDTO::getTotalScore).reversed())
+                  .toList();
         }
 
         public JudgeDetailHackathonResponseDTO getHackathonDetailsById(Long hackathonId, String authenticatedEmail) {

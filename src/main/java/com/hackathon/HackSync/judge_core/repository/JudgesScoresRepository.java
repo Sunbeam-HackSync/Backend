@@ -10,4 +10,5 @@ import java.util.List;
 public interface JudgesScoresRepository extends JpaRepository<JudgesScores, Long> {
     List<JudgesScores> findByProjectId_Id(Long projectId);
     List<JudgesScores> findByJudgeId_Id(Long judgeId);
+    boolean existsByProjectId_IdAndJudgeId_Id(Long projectId, Long judgeId);
 }
