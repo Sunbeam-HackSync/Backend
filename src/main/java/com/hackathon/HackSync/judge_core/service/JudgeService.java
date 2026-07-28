@@ -110,6 +110,17 @@ public class JudgeService {
                 }
         }
 
+        public boolean areWinnersSubmitted(Long hackathonId, String authenticatedEmail) {
+                Users judge = userRepository.findByEmail(authenticatedEmail)
+                                .orElseThrow(() -> new UsernameNotFoundException("Judge not found"));
+
+                // Verify that the judge is assigned
+                hackathonJudgesRepository.findByHackathonsId_IdAndJudgeUserId_Id(hackathonId, judge.getId())
+                                .orElseThrow(() -> new AccessDeniedException("Access Denied"));
+
+                return !hackathonWinnersRepository.findByHackathonId_Id(hackathonId).isEmpty();
+        }
+
         public List<AssignedHackathonResponseDTO> getMyAssignedHackathons(String authenticatedEmail) {
                 Users judge = userRepository.findByEmail(authenticatedEmail)
                                 .orElseThrow(() -> new UsernameNotFoundException("Judge not found"));
@@ -202,21 +213,22 @@ public class JudgeService {
                                 .findByHackathonId_IdAndAssignedJudgeId_Id(hackathonId, judge.getId());
 
                 return submissions.stream().map(submission -> {
-                        boolean isEvaluated = judgesScoresRepository.existsByProjectId_IdAndJudgeId_Id(submission.getId(), judge.getId());
+                        boolean isEvaluated = judgesScoresRepository
+                                        .existsByProjectId_IdAndJudgeId_Id(submission.getId(), judge.getId());
                         return ProjectSubmissionResponseDTO.builder()
-                                .id(submission.getId())
-                                .projectTitle(submission.getProjectTitle())
-                                .tagLine(submission.getTagLine())
-                                .description(submission.getDescription())
-                                .githubRepoUrl(submission.getGithubRepoUrl())
-                                .liveDemoUrl(submission.getLiveDemoUrl())
-                                .youtubeUrl(submission.getYoutubeUrl())
-                                .submissionStatus(submission.getSubmissionStatus())
-                                .teamId(submission.getTeamsId().getId())
-                                .teamName(submission.getTeamsId().getTeamName())
-                                .submittedAt(submission.getSubmittedAt())
-                                .isEvaluated(isEvaluated)
-                                .build();
+                                        .id(submission.getId())
+                                        .projectTitle(submission.getProjectTitle())
+                                        .tagLine(submission.getTagLine())
+                                        .description(submission.getDescription())
+                                        .githubRepoUrl(submission.getGithubRepoUrl())
+                                        .liveDemoUrl(submission.getLiveDemoUrl())
+                                        .youtubeUrl(submission.getYoutubeUrl())
+                                        .submissionStatus(submission.getSubmissionStatus())
+                                        .teamId(submission.getTeamsId().getId())
+                                        .teamName(submission.getTeamsId().getTeamName())
+                                        .submittedAt(submission.getSubmittedAt())
+                                        .isEvaluated(isEvaluated)
+                                        .build();
                 }).toList();
         }
 
@@ -251,26 +263,27 @@ public class JudgeService {
                 }
 
                 return submissions.stream().map(submission -> {
-                        boolean isEvaluated = judgesScoresRepository.existsByProjectId_IdAndJudgeId_Id(submission.getId(), judge.getId());
+                        boolean isEvaluated = judgesScoresRepository
+                                        .existsByProjectId_IdAndJudgeId_Id(submission.getId(), judge.getId());
                         ProjectSubmissionResponseDTO submissionDTO = ProjectSubmissionResponseDTO.builder()
-                                .id(submission.getId())
-                                .projectTitle(submission.getProjectTitle())
-                                .tagLine(submission.getTagLine())
-                                .description(submission.getDescription())
-                                .githubRepoUrl(submission.getGithubRepoUrl())
-                                .liveDemoUrl(submission.getLiveDemoUrl())
-                                .youtubeUrl(submission.getYoutubeUrl())
-                                .submissionStatus(submission.getSubmissionStatus())
-                                .teamId(submission.getTeamsId().getId())
-                                .teamName(submission.getTeamsId().getTeamName())
-                                .submittedAt(submission.getSubmittedAt())
-                                .isEvaluated(isEvaluated)
-                                .build();
+                                        .id(submission.getId())
+                                        .projectTitle(submission.getProjectTitle())
+                                        .tagLine(submission.getTagLine())
+                                        .description(submission.getDescription())
+                                        .githubRepoUrl(submission.getGithubRepoUrl())
+                                        .liveDemoUrl(submission.getLiveDemoUrl())
+                                        .youtubeUrl(submission.getYoutubeUrl())
+                                        .submissionStatus(submission.getSubmissionStatus())
+                                        .teamId(submission.getTeamsId().getId())
+                                        .teamName(submission.getTeamsId().getTeamName())
+                                        .submittedAt(submission.getSubmittedAt())
+                                        .isEvaluated(isEvaluated)
+                                        .build();
 
                         List<JudgesScores> scores = judgesScoresRepository.findByProjectId_Id(submission.getId());
-                        
+
                         java.util.Map<Users, List<JudgesScores>> groupedScores = scores.stream()
-                                .collect(java.util.stream.Collectors.groupingBy(JudgesScores::getJudgeId));
+                                        .collect(java.util.stream.Collectors.groupingBy(JudgesScores::getJudgeId));
 
                         List<SuperJudgeSubmissionResponseDTO.JudgeEvaluationDTO> evaluations = new java.util.ArrayList<>();
                         double totalSubmissionScore = 0;
@@ -281,35 +294,35 @@ public class JudgeService {
 
                                 List<SuperJudgeSubmissionResponseDTO.ScoreDetailDTO> scoreDetails = new java.util.ArrayList<>();
                                 double judgeTotal = 0;
-                                
+
                                 for (JudgesScores js : judgeScores) {
                                         scoreDetails.add(SuperJudgeSubmissionResponseDTO.ScoreDetailDTO.builder()
-                                                .criteriaId(js.getCriteriaId().getId())
-                                                .criteriaName(js.getCriteriaId().getCriteriaName())
-                                                .maxScore(js.getCriteriaId().getMaxScore())
-                                                .scoreGiven(js.getScoreGiven())
-                                                .feedbackNotes(js.getFeedBackNotes())
-                                                .build());
+                                                        .criteriaId(js.getCriteriaId().getId())
+                                                        .criteriaName(js.getCriteriaId().getCriteriaName())
+                                                        .maxScore(js.getCriteriaId().getMaxScore())
+                                                        .scoreGiven(js.getScoreGiven())
+                                                        .feedbackNotes(js.getFeedBackNotes())
+                                                        .build());
                                         judgeTotal += js.getScoreGiven();
                                 }
 
                                 evaluations.add(SuperJudgeSubmissionResponseDTO.JudgeEvaluationDTO.builder()
-                                        .judgeId(evalJudge.getId())
-                                        .judgeEmail(evalJudge.getEmail())
-                                        .scoreDetails(scoreDetails)
-                                        .judgeTotalScore(judgeTotal)
-                                        .build());
-                                
+                                                .judgeId(evalJudge.getId())
+                                                .judgeEmail(evalJudge.getEmail())
+                                                .scoreDetails(scoreDetails)
+                                                .judgeTotalScore(judgeTotal)
+                                                .build());
+
                                 totalSubmissionScore += judgeTotal;
                         }
 
                         return SuperJudgeSubmissionResponseDTO.builder()
-                                .submission(submissionDTO)
-                                .evaluations(evaluations)
-                                .totalScore(totalSubmissionScore)
-                                .build();
+                                        .submission(submissionDTO)
+                                        .evaluations(evaluations)
+                                        .totalScore(totalSubmissionScore)
+                                        .build();
                 }).sorted(Comparator.comparingDouble(SuperJudgeSubmissionResponseDTO::getTotalScore).reversed())
-                  .toList();
+                                .toList();
         }
 
         public JudgeDetailHackathonResponseDTO getHackathonDetailsById(Long hackathonId, String authenticatedEmail) {

@@ -44,6 +44,14 @@ public class JudgeController {
                                 .ok(new ApiResponse<>("Hackathon winners submitted successfully", HttpStatus.OK, null));
         }
 
+        @GetMapping("/hackathon/{hackathonId}/winners-submitted")
+        public ResponseEntity<ApiResponse<Boolean>> checkWinnersSubmitted(
+                        @PathVariable Long hackathonId,
+                        Principal principal) {
+                boolean submitted = judgeService.areWinnersSubmitted(hackathonId, principal.getName());
+                return ResponseEntity.ok(new ApiResponse<>("Check successful", HttpStatus.OK, submitted));
+        }
+
         @GetMapping("/hackathons")
         public ResponseEntity<ApiResponse<List<AssignedHackathonResponseDTO>>> getMyAssignedHackathons(
                         Principal principal) {
