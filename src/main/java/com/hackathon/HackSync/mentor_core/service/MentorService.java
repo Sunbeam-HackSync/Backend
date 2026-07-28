@@ -41,7 +41,7 @@ public class MentorService {
         Users mentor = userRepository.findByEmail(authenticatedEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("Mentor not found"));
 
-        //TODO add this exception class in global exception controller
+        // TODO add this exception class in global exception controller
         TicketStatus status;
         try {
             status = TicketStatus.valueOf(statusString.toUpperCase());
@@ -71,7 +71,7 @@ public class MentorService {
         HelpTickets ticket = helpTicketRepository.findByIdForUpdate(ticketId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found"));
 
-        //TODO throw ticket invalid exception
+        // TODO throw ticket invalid exception
         if (ticket.getStatus() != TicketStatus.OPEN) {
             throw new RuntimeException("Ticket is already claimed or resolved");
         }
@@ -87,8 +87,9 @@ public class MentorService {
         ticket.setMentorMeetingLink(meetingResponse.getMentorLink());
 
         helpTicketRepository.save(ticket);
-        messagingTemplate.convertAndSend("/topic/tickets", /*"TICKET_CLAIMED"*/ TicketStatus.CLAIMED);
-        messagingTemplate.convertAndSend("/topic/team/" + ticket.getTeamId().getId() + "/tickets", /*"TICKET_CLAIMED"*/ TicketStatus.CLAIMED);
+        messagingTemplate.convertAndSend("/topic/tickets", /* "TICKET_CLAIMED" */ TicketStatus.CLAIMED);
+        messagingTemplate.convertAndSend("/topic/team/" + ticket.getTeamId().getId() + "/tickets",
+                /* "TICKET_CLAIMED" */ TicketStatus.CLAIMED);
         return mapToDTO(ticket);
     }
 
@@ -100,7 +101,7 @@ public class MentorService {
                 .orElseThrow(() -> new UsernameNotFoundException("Ticket not found"));
 
         if (ticket.getAssignedMentorId() == null || !ticket.getAssignedMentorId().getId().equals(mentor.getId())) {
-            //TODO throw not authorized exception
+            // TODO throw not authorized exception
             throw new RuntimeException("You are not the mentor assigned to this ticket");
         }
 
@@ -108,7 +109,9 @@ public class MentorService {
         ticket.setResolvedAt(LocalDateTime.now());
 
         helpTicketRepository.save(ticket);
-        messagingTemplate.convertAndSend("/topic/team/" + ticket.getTeamId().getId() + "/tickets", /*"TICKET_RESOLVED"*/ TicketStatus.RESOLVED);
+        messagingTemplate.convertAndSend("/topic/tickets", TicketStatus.RESOLVED);
+        messagingTemplate.convertAndSend("/topic/team/" + ticket.getTeamId().getId() + "/tickets",
+                TicketStatus.RESOLVED);
         return mapToDTO(ticket);
     }
 
@@ -132,7 +135,8 @@ public class MentorService {
         Users mentor = userRepository.findByEmail(authenticatedEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("Mentor not found"));
 
-        HackathonsMentors hackathonMentor = hackathonsMentorsRepository.findByHackathonId_IdAndMentorsId_Id(hackathonId, mentor.getId())
+        HackathonsMentors hackathonMentor = hackathonsMentorsRepository
+                .findByHackathonId_IdAndMentorsId_Id(hackathonId, mentor.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Hackathon mentor invitation not found"));
 
         MentorStatus status;

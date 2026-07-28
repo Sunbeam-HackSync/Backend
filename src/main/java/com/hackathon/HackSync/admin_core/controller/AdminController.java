@@ -59,10 +59,16 @@ public class AdminController {
                 adminService.getPlatformMetrics()));
     }
 
-    @PutMapping("/users/{id}/ban")
-    public ResponseEntity<ApiResponse<Users>> banUser(@PathVariable Long id) {
+    @PutMapping("/users/{email}/ban")
+    public ResponseEntity<ApiResponse<Users>> banUser(@PathVariable String email) {
         return ResponseEntity
-                .ok(new ApiResponse<>("User banned successfully", HttpStatus.OK, adminService.banUser(id)));
+                .ok(new ApiResponse<>("User banned successfully", HttpStatus.OK, adminService.banUser(email)));
+    }
+
+    @PutMapping("/users/{email}/unban")
+    public ResponseEntity<ApiResponse<Users>> unbanUser(@PathVariable String email) {
+        return ResponseEntity
+                .ok(new ApiResponse<>("User unbanned successfully", HttpStatus.OK, adminService.unbanUser(email)));
     }
 
     /*

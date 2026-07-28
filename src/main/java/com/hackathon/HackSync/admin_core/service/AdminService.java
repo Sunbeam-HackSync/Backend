@@ -89,10 +89,19 @@ public class AdminService {
                                 .build();
         }
 
-        public Users banUser(@NonNull Long id) {
-                Users user = userRepository.findById(id)
-                                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        public Users banUser(@NonNull String email) {
+                Users user = userRepository.findByEmail(email)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "User not found with email: " + email));
                 user.setBanned(true);
+                return userRepository.save(user);
+        }
+
+        public Users unbanUser(@NonNull String email) {
+                Users user = userRepository.findByEmail(email)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "User not found with email: " + email));
+                user.setBanned(false);
                 return userRepository.save(user);
         }
 

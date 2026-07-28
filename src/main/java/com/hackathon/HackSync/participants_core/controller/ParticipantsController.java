@@ -145,7 +145,7 @@ public class ParticipantsController {
     public ResponseEntity<ApiResponse<List<GetHelpTicketInfoDTO>>> getHelpTicket(@PathVariable Long hackathonId,
             @PathVariable Long TeamId, Principal principal) {
 
-        List<GetHelpTicketInfoDTO> helpTickets = helpTicketService.getTicketByTeamsAndHackathonId(hackathonId, TeamId,
+        List<GetHelpTicketInfoDTO> helpTickets = helpTicketService.getTicketByTeamsAndHackathonId(TeamId, hackathonId,
                 principal.getName());
         return ResponseEntity.ok(new ApiResponse<>("Help ticket fetched successfully", HttpStatus.OK, helpTickets));
     }

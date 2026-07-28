@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class HackathonWithTeamDetailsResponseDTO {
     private HackathonDetailResponseDTO hackathonDetails;
     private TeamWithParticipantsResponseDTO teamDetails;
+    private SubmissionResponseDTO projectSubmission;
 }

@@ -16,6 +16,7 @@ import com.hackathon.HackSync.utils.exception.AlreadyVerifiedException;
 import com.hackathon.HackSync.utils.exception.InvalidOTPException;
 import com.hackathon.HackSync.utils.exception.InvalidRefreshTokenException;
 import com.hackathon.HackSync.utils.exception.ResourceNotFoundException;
+import com.hackathon.HackSync.utils.exception.UserBannedException;
 
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -92,6 +93,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex) {
         return new ResponseEntity<>(ErrorResponse.builder().status(HttpStatus.FORBIDDEN).message(ex.getMessage()).build(),
         HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(UserBannedException.class)
+    public ResponseEntity<ErrorResponse> handleUserBannedException(UserBannedException ex) {
+        return new ResponseEntity<>(
+                ErrorResponse.builder().status(HttpStatus.FORBIDDEN).message(ex.getMessage()).build(),
+                HttpStatus.FORBIDDEN);
     }
     
     @ExceptionHandler(RuntimeException.class)

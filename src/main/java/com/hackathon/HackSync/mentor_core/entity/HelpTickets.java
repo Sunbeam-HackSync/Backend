@@ -37,7 +37,7 @@ public class HelpTickets extends BaseClass {
     private String issueTitle;
 
     @Column(name = "issue_description", columnDefinition = "TEXT")
-    private String issueDescription;    
+    private String issueDescription;
 
     @Column(name = "tech_tags", length = 100)
     private String techTags;
@@ -45,10 +45,10 @@ public class HelpTickets extends BaseClass {
     @Column(name = "contact_location", length = 255)
     private String contactLocation;
 
-    @Column(name = "participant_meeting_link", length = 512)
+    @Column(name = "participant_meeting_link", columnDefinition = "TEXT")
     private String participantMeetingLink;
 
-    @Column(name = "mentor_meeting_link", length = 512)
+    @Column(name = "mentor_meeting_link", columnDefinition = "TEXT")
     private String mentorMeetingLink;
 
     @Enumerated(EnumType.STRING)

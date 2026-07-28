@@ -2,6 +2,7 @@ package com.hackathon.HackSync.auth.config;
 
 import com.hackathon.HackSync.auth.service.JWTService;
 import com.hackathon.HackSync.auth.service.UserService;
+import com.hackathon.HackSync.utils.exception.UserBannedException;
 
 import java.io.IOException;
 
@@ -32,7 +33,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UserService userService) {
         this.handlerExceptionResolver = handlerExceptionResolver;
         this.jwtService = jwtService;
-        this.userService  = userService;
+        this.userService = userService;
     }
 
     @Override
@@ -56,11 +57,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (userEmail != null && authentication == null) {
                 UserDetails userDetails = this.userService.loadUserByUsername(userEmail);
 
+                if (!userDetails.isAccountNonLocked()) {
+                    throw new UserBannedException("Your account has been banned. You have been logged out.");
+                }
+
                 if (jwtService.isTokenValid(jwt, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,
                             null, userDetails.getAuthorities());
                     // this is for seeting the user IP address for auditing and logging
-                    // authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    // authToken.setDetails(new
+                    // WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }

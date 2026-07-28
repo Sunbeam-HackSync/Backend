@@ -137,7 +137,7 @@ public class HackathonService {
         String feedbackNotes = null;
         if (hackathon.getHackathonStatus() == HackathonStatus.REJECTED) {
             feedbackNotes = hackathonReviewsRepository.findByHackathonId(hackathon)
-                    .map(com.hackathon.HackSync.admin_core.entity.HackathonReviews::getFeedbackNotes)
+                    .map(HackathonReviews::getFeedbackNotes)
                     .orElse(null);
         }
 

@@ -447,7 +447,7 @@ public class ParticipantService {
                 // Verify user is in the team
                 TeamMembers memberRecord = teamMemberRepository.findByTeamsIdAndUserId(team, user)
                                 .orElseThrow(() -> new RuntimeException("You are not a member of this team"));
-                                     
+
                 if (projectSubmissionRepository.existsByTeamsId(team)) {
                         throw new RuntimeException("Team already has a submission");
                 }
@@ -494,16 +494,36 @@ public class ParticipantService {
                                 .orElseThrow(() -> new RuntimeException("User not found"));
 
                 // Find team for this user in this hackathon
-                Optional<TeamMembers> teamMember = teamMemberRepository.findByHackathonIdAndUserId(hackathonId, user.getId());
+                Optional<TeamMembers> teamMember = teamMemberRepository.findByHackathonIdAndUserId(hackathonId,
+                                user.getId());
 
+                SubmissionResponseDTO projectSubmission = null;
                 TeamWithParticipantsResponseDTO teamDetails = null;
                 if (teamMember.isPresent()) {
                         teamDetails = seeMyTeamDetails(teamMember.get().getTeamsId().getId(), email);
+                        Optional<ProjectSubmissions> submissionOpt = projectSubmissionRepository
+                                        .findByTeamsId(teamMember.get().getTeamsId());
+                        if (submissionOpt.isPresent()) {
+                                ProjectSubmissions submission = submissionOpt.get();
+                                projectSubmission = SubmissionResponseDTO.builder()
+                                                .projectSubmissionId(submission.getId())
+                                                .teamId(submission.getTeamsId().getId())
+                                                .hackathonId(hackathonId)
+                                                .projectTitle(submission.getProjectTitle())
+                                                .tagLine(submission.getTagLine())
+                                                .description(submission.getDescription())
+                                                .githubRepoUrl(submission.getGithubRepoUrl())
+                                                .liveDemoUrl(submission.getLiveDemoUrl())
+                                                .youtubeUrl(submission.getYoutubeUrl())
+                                                .submissionStatus(submission.getSubmissionStatus().name())
+                                                .build();
+                        }
                 }
 
                 return HackathonWithTeamDetailsResponseDTO.builder()
                                 .hackathonDetails(hackathonDetails)
                                 .teamDetails(teamDetails)
+                                .projectSubmission(projectSubmission)
                                 .build();
         }
 

@@ -12,6 +12,7 @@ import com.hackathon.HackSync.utils.service.EmailService;
 import com.hackathon.HackSync.utils.exception.AlreadyVerifiedException;
 import com.hackathon.HackSync.utils.exception.InvalidOTPException;
 import com.hackathon.HackSync.utils.exception.ResourceNotFoundException;
+import com.hackathon.HackSync.utils.exception.UserBannedException;
 
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -118,6 +120,8 @@ public class AuthenticationService {
                             loginRequestDto.getPassword()));
         } catch (DisabledException e) {
             throw new RuntimeException("Account not verified. Please verify your email using the OTP sent to you.");
+        } catch (LockedException e) {
+            throw new UserBannedException("Your account has been banned. You cannot login.");
         } catch (BadCredentialsException e) {
             throw new RuntimeException("Invalid Email or Password");
         }
