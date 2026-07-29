@@ -69,7 +69,7 @@ public class EmailService {
                               <table cellpadding="0" cellspacing="0" role="presentation">
                                 <tr>
                                   <td style="border-radius:4px;background-color:#0A0A0A;">
-                                    <a href="http://hackathon-platform.com/register?email={{email}}&role={{role}}"
+                                    <a href="http://localhost:5173/login?email={{email}}&role={{role}}"
                                        style="display:inline-block;padding:13px 28px;font-size:14px;font-weight:500;color:#FFFFFF;text-decoration:none;letter-spacing:0.02em;border-radius:4px;">
                                       Accept Invitation &rarr;
                                     </a>
@@ -79,7 +79,7 @@ public class EmailService {
                               <p style="margin:28px 0 0;font-size:12px;color:#A3A3A3;line-height:1.6;">
                                 Or copy this link into your browser:<br>
                                 <span style="color:#6B6B6B;word-break:break-all;">
-                                  http://hackathon-platform.com/register?email={{email}}&role={{role}}
+                                  http://localhost:5173/login?email={{email}}&role={{role}}
                                 </span>
                               </p>
 
