@@ -531,7 +531,7 @@ public class ParticipantService {
                 Hackathons hackathon = hackathonRepository.findById(hackathonId)
                                 .orElseThrow(() -> new RuntimeException("Hackathon not found"));
 
-                if (hackathon.getHackathonStatus() != HackathonStatus.COMPLETED) {
+                if (hackathon.getHackathonStatus() != HackathonStatus.PUBLISHED) {
                         throw new RuntimeException("Results are not yet declared for this hackathon");
                 }
 
