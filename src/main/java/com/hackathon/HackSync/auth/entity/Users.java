@@ -23,6 +23,7 @@ public class Users extends BaseClass implements UserDetails {
     @Column(unique = true, nullable = false)
     private String email;
 
+    @JsonIgnore
     @Column(nullable = false)
     private String password_hash;
 
@@ -33,9 +34,11 @@ public class Users extends BaseClass implements UserDetails {
     @Column(name = "is_email_verified", nullable = false)
     private boolean isEmailVerified = false;
 
+    @JsonIgnore
     @Column(name = "is_banned", nullable = false)
     private boolean isBanned = false;
 
+    @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));

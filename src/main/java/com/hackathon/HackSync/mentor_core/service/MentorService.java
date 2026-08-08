@@ -2,13 +2,18 @@ package com.hackathon.HackSync.mentor_core.service;
 
 import com.hackathon.HackSync.auth.entity.Users;
 import com.hackathon.HackSync.auth.repository.UserRepository;
+import com.hackathon.HackSync.host_core.entity.Hackathons;
 import com.hackathon.HackSync.mentor_core.dto.MentorTicketResponseDTO;
 import com.hackathon.HackSync.mentor_core.entity.HelpTickets;
 import com.hackathon.HackSync.mentor_core.entity.TicketStatus;
 import com.hackathon.HackSync.mentor_core.repository.helpTicketRepository;
+import com.hackathon.HackSync.mentor_core.repository.HackathonsMentorsRepository;
+import com.hackathon.HackSync.mentor_core.entity.HackathonsMentors;
+import com.hackathon.HackSync.mentor_core.entity.MentorStatus;
 import com.hackathon.HackSync.utils.exception.ResourceNotFoundException;
 import com.hackathon.HackSync.mentor_core.dto.MeetingRequestDTO;
 import com.hackathon.HackSync.mentor_core.dto.MeetingResponseDTO;
+import com.hackathon.HackSync.mentor_core.dto.MentorAssignedHackathonResponseDTO;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,6 +33,7 @@ public class MentorService {
 
     private final UserRepository userRepository;
     private final helpTicketRepository helpTicketRepository;
+    private final HackathonsMentorsRepository hackathonsMentorsRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final MeetingService meetingService;
 
@@ -35,7 +41,7 @@ public class MentorService {
         Users mentor = userRepository.findByEmail(authenticatedEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("Mentor not found"));
 
-        //TODO add this exception class in global exception controller
+        // TODO add this exception class in global exception controller
         TicketStatus status;
         try {
             status = TicketStatus.valueOf(statusString.toUpperCase());
@@ -65,7 +71,7 @@ public class MentorService {
         HelpTickets ticket = helpTicketRepository.findByIdForUpdate(ticketId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found"));
 
-        //TODO throw ticket invalid exception
+        // TODO throw ticket invalid exception
         if (ticket.getStatus() != TicketStatus.OPEN) {
             throw new RuntimeException("Ticket is already claimed or resolved");
         }
@@ -81,8 +87,9 @@ public class MentorService {
         ticket.setMentorMeetingLink(meetingResponse.getMentorLink());
 
         helpTicketRepository.save(ticket);
-        messagingTemplate.convertAndSend("/topic/tickets", /*"TICKET_CLAIMED"*/ TicketStatus.CLAIMED);
-        messagingTemplate.convertAndSend("/topic/team/" + ticket.getTeamId().getId() + "/tickets", /*"TICKET_CLAIMED"*/ TicketStatus.CLAIMED);
+        messagingTemplate.convertAndSend("/topic/tickets", /* "TICKET_CLAIMED" */ TicketStatus.CLAIMED);
+        messagingTemplate.convertAndSend("/topic/team/" + ticket.getTeamId().getId() + "/tickets",
+                /* "TICKET_CLAIMED" */ TicketStatus.CLAIMED);
         return mapToDTO(ticket);
     }
 
@@ -94,7 +101,7 @@ public class MentorService {
                 .orElseThrow(() -> new UsernameNotFoundException("Ticket not found"));
 
         if (ticket.getAssignedMentorId() == null || !ticket.getAssignedMentorId().getId().equals(mentor.getId())) {
-            //TODO throw not authorized exception
+            // TODO throw not authorized exception
             throw new RuntimeException("You are not the mentor assigned to this ticket");
         }
 
@@ -102,7 +109,9 @@ public class MentorService {
         ticket.setResolvedAt(LocalDateTime.now());
 
         helpTicketRepository.save(ticket);
-        messagingTemplate.convertAndSend("/topic/team/" + ticket.getTeamId().getId() + "/tickets", /*"TICKET_RESOLVED"*/ TicketStatus.RESOLVED);
+        messagingTemplate.convertAndSend("/topic/tickets", TicketStatus.RESOLVED);
+        messagingTemplate.convertAndSend("/topic/team/" + ticket.getTeamId().getId() + "/tickets",
+                TicketStatus.RESOLVED);
         return mapToDTO(ticket);
     }
 
@@ -120,5 +129,46 @@ public class MentorService {
                 .claimedAt(ticket.getClaimedAt())
                 .resolvedAt(ticket.getResolvedAt())
                 .build();
+    }
+
+    public String updateInvitationStatus(Long hackathonId, String statusString, String authenticatedEmail) {
+        Users mentor = userRepository.findByEmail(authenticatedEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("Mentor not found"));
+
+        HackathonsMentors hackathonMentor = hackathonsMentorsRepository
+                .findByHackathonId_IdAndMentorsId_Id(hackathonId, mentor.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Hackathon mentor invitation not found"));
+
+        MentorStatus status;
+        try {
+            status = MentorStatus.valueOf(statusString.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid mentor status");
+        }
+
+        hackathonMentor.setStatus(status);
+        hackathonsMentorsRepository.save(hackathonMentor);
+
+        return "Invitation status updated to " + status.name();
+    }
+
+    public List<MentorAssignedHackathonResponseDTO> getMyAssignedHackathons(String authenticatedEmail) {
+        Users mentor = userRepository.findByEmail(authenticatedEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("Mentor not found"));
+
+        List<HackathonsMentors> assignments = hackathonsMentorsRepository.findByMentorsId_Id(mentor.getId());
+
+        return assignments.stream().map(assignment -> {
+            Hackathons hackathon = assignment.getHackathonId();
+            return MentorAssignedHackathonResponseDTO.builder()
+                    .hackathonId(hackathon.getId())
+                    .title(hackathon.getTitle())
+                    .tagline(hackathon.getTagline())
+                    .hackathonStatus(hackathon.getHackathonStatus())
+                    .hackathonStarts(hackathon.getHackathonStart())
+                    .hackathonEnds(hackathon.getHackathonEnd())
+                    .invitationStatus(assignment.getStatus())
+                    .build();
+        }).toList();
     }
 }

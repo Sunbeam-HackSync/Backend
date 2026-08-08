@@ -30,11 +30,21 @@ public class ParticipantsController {
         Page<HackathonDetailResponseDTO> hackathons = participantService.getDiscoveryFeed(page, size);
         return ResponseEntity.ok(new ApiResponse<>("Discovery feed fetched successfully", HttpStatus.OK, hackathons));
     }
+    /* Make this enpoint public */
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<HackathonDetailResponseDTO>> getHackathonById(@PathVariable Long id) {
         HackathonDetailResponseDTO details = participantService.getPublicHackathonDetail(id);
         return ResponseEntity.ok(new ApiResponse<>("Hackathon details fetched successfully", HttpStatus.OK, details));
+    }
+
+    @GetMapping("/hackathons/{id}/my-details")
+    public ResponseEntity<ApiResponse<HackathonWithTeamDetailsResponseDTO>> getHackathonWithTeamDetails(
+            @PathVariable Long id, Principal principal) {
+        HackathonWithTeamDetailsResponseDTO response = participantService.getHackathonWithTeamDetails(id,
+                principal.getName());
+        return ResponseEntity
+                .ok(new ApiResponse<>("Hackathon and team details fetched successfully", HttpStatus.OK, response));
     }
 
     @GetMapping("/my-hackathons")
@@ -93,29 +103,50 @@ public class ParticipantsController {
         return ResponseEntity.ok(new ApiResponse<>("Team details fetched successfully", HttpStatus.OK, response));
     }
 
-    /*
-     * GET /participants/hackathons - Fetches a paginated list of all hackathons
-     * with the status ACTIVE or APPROVED for the discovery feed.
-     * 
-     * GET /participants/hackathons/{id} - Retrieves the detailed rules, timeline,
-     * and description of a specific hackathon.
-     * 
-     * POST /participants/createTeam - Creates a new team and automatically assigns
-     * the creator as the is_team_leader.
-     * 
-     * POST /participants/helpTickets - Generates a new Help Ticket (Issue + Tech
-     * Stack) with an OPEN status.
-     * 
-     * GET /participants/teams/looking - Fetches all teams within a hackathon where
-     * is_looking_for_members is TRUE to populate the matchmaking board.
-     * 
-     * POST /participants/teams/{id}/join - Adds the participant to the team_members
-     * mapping table.
-     * 
-     * PUT /participants/teams/{id} - or toggle their looking status.
-     * 
-     * POST /participants/submissions - Creates the final project record (Title,
-     * Description, GitHub link, Demo Video link) tied to the team.
-     */
+    @GetMapping("/hackathon/{hackathonId}/result")
+    public ResponseEntity<ApiResponse<ParticipantResultResponseDTO>> getHackathonResult(
+            @PathVariable Long hackathonId,
+            Principal principal) {
+        ParticipantResultResponseDTO result = participantService.getHackathonResult(hackathonId, principal.getName());
+        return ResponseEntity.ok(new ApiResponse<>("Hackathon result retrieved successfully", HttpStatus.OK, result));
+    }
 
+    @GetMapping("/hackathon/{hackathonId}/winners")
+    public ResponseEntity<ApiResponse<List<HackathonWinnerResponseDTO>>> getHackathonWinners(
+            @PathVariable Long hackathonId) {
+        List<HackathonWinnerResponseDTO> winners = participantService.getHackathonWinners(hackathonId);
+        return ResponseEntity.ok(new ApiResponse<>("Hackathon winners retrieved successfully", HttpStatus.OK, winners));
+    }
+
+    @PostMapping("/profile")
+    public ResponseEntity<ApiResponse<ParticipantProfileDTO>> createProfile(
+            @RequestBody ParticipantProfileDTO request,
+            Principal principal) {
+        ParticipantProfileDTO createdProfile = participantService.createProfile(request, principal.getName());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>("Profile created successfully", HttpStatus.CREATED, createdProfile));
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<ApiResponse<ParticipantProfileDTO>> getProfile(Principal principal) {
+        ParticipantProfileDTO profile = participantService.getProfile(principal.getName());
+        return ResponseEntity.ok(new ApiResponse<>("Profile fetched successfully", HttpStatus.OK, profile));
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse<ParticipantProfileDTO>> updateProfile(
+            @RequestBody ParticipantProfileDTO request,
+            Principal principal) {
+        ParticipantProfileDTO updatedProfile = participantService.updateProfile(request, principal.getName());
+        return ResponseEntity.ok(new ApiResponse<>("Profile updated successfully", HttpStatus.OK, updatedProfile));
+    }
+
+    @GetMapping("/tickets/{hackathonId}/{TeamId}")
+    public ResponseEntity<ApiResponse<List<GetHelpTicketInfoDTO>>> getHelpTicket(@PathVariable Long hackathonId,
+            @PathVariable Long TeamId, Principal principal) {
+
+        List<GetHelpTicketInfoDTO> helpTickets = helpTicketService.getTicketByTeamsAndHackathonId(TeamId, hackathonId,
+                principal.getName());
+        return ResponseEntity.ok(new ApiResponse<>("Help ticket fetched successfully", HttpStatus.OK, helpTickets));
+    }
 }

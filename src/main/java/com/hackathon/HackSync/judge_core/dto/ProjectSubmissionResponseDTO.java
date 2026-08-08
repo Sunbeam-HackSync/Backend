@@ -15,8 +15,10 @@ public class ProjectSubmissionResponseDTO {
     private String description;
     private String githubRepoUrl;
     private String liveDemoUrl;
+    private String youtubeUrl;
     private ProjectSubmissionStatus submissionStatus;
     private Long teamId;
     private String teamName;
     private LocalDateTime submittedAt;
+    private Boolean isEvaluated;
 }

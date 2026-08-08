@@ -18,6 +18,9 @@ public interface TeamMemberRepository extends JpaRepository<TeamMembers, Long> {
     @Query("SELECT tm FROM TeamMembers tm JOIN FETCH tm.userId JOIN FETCH tm.teamsId t WHERE t.hackathonId.id = :hackathonId")
     List<TeamMembers> findByHackathonId(@Param("hackathonId") Long hackathonId);
 
+    @Query("SELECT tm FROM TeamMembers tm JOIN FETCH tm.teamsId t WHERE t.hackathonId.id = :hackathonId AND tm.userId.id = :userId")
+    Optional<TeamMembers> findByHackathonIdAndUserId(@Param("hackathonId") Long hackathonId, @Param("userId") Long userId);
+
     boolean existsByTeamsIdIdAndUserIdId(Long id, Long id1);
 
     boolean existsByTeamsIdHackathonIdIdAndUserIdId(Long id, Long id1);

@@ -27,6 +27,9 @@ public class EvaluationCriteria extends BaseClass {
 
     @Column(name = "max_score")
     private int maxScore;
-
-    private double weight;
 }
+/*
+    The evaluation criteria would be like the 
+    presentation skills, innovation , 
+    implementation and some other things that are provided by the host
+*/

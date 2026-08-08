@@ -9,6 +9,7 @@ import lombok.Data;
 public class ParticipantResponseDTO {
     private Long userId;
     private String email;
+    private String fullName;
     private Long teamId;
     private String teamName;
     private boolean isTeamLeader;

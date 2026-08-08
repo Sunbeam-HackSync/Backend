@@ -15,4 +15,5 @@ public class HackathonResponse {
     private HackathonStatus hackathonStatus;
     private LocalDateTime hackathonStarts;
     private LocalDateTime hackathonEnds;
+    private String feedBackNotes;
 }

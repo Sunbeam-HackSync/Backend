@@ -40,7 +40,8 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<LoginResponse>> authenticate(@RequestBody LoginRequestDto loginRequestDto, HttpServletResponse response) {
+    public ResponseEntity<ApiResponse<LoginResponse>> authenticate(@RequestBody LoginRequestDto loginRequestDto,
+            HttpServletResponse response) {
         Users user = authenticationService.signIn(loginRequestDto);
         String jwtToken = jwtService.generateToken(user);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
@@ -52,7 +53,8 @@ public class AuthController {
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<ApiResponse<LoginResponse>> verifyOtpAndLogin(@RequestBody VerifyOtpDto verifyOtpDto, HttpServletResponse response) {
+    public ResponseEntity<ApiResponse<LoginResponse>> verifyOtpAndLogin(@RequestBody VerifyOtpDto verifyOtpDto,
+            HttpServletResponse response) {
         Users user = authenticationService.verifyOtp(verifyOtpDto);
         String jwtToken = jwtService.generateToken(user);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
@@ -84,7 +86,6 @@ public class AuthController {
 
         Users user = refreshToken.getUser();
 
-        // Rotate refresh token
         RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user.getId());
         setRefreshTokenCookie(response, newRefreshToken.getToken());
 
@@ -95,7 +96,8 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Object>> logout(@CookieValue(name = "refresh_token", required = false) String refreshTokenString,
+    public ResponseEntity<ApiResponse<Object>> logout(
+            @CookieValue(name = "refresh_token", required = false) String refreshTokenString,
             HttpServletResponse response) {
         if (refreshTokenString != null) {
             refreshTokenService.revokeToken(refreshTokenString);

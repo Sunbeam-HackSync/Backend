@@ -26,4 +26,8 @@ public class HackathonDetailResponseDTO {
     private LocalDateTime hackathonStart;
     private LocalDateTime hackathonEnd;
     private HackathonStatus hackathonStatus;
+    private String faq;
+    private String rules;
+    private LocalDateTime resultDeclarationDate;
+    private String feedBackNotes;
 }

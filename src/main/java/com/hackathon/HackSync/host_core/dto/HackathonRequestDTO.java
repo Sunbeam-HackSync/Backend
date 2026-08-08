@@ -17,4 +17,7 @@ public class HackathonRequestDTO {
     private LocalDateTime registrationEnd;
     private LocalDateTime hackathonStart;
     private LocalDateTime hackathonEnd;
+    private String faq;
+    private String rules;
+    private LocalDateTime resultDeclarationDate;
 }
