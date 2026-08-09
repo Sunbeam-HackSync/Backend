@@ -17,6 +17,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 
+import com.hackathon.HackSync.logging.service.LogProxyService;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +31,7 @@ public class AuthController {
     private final JWTService jwtService;
     private final AuthenticationService authenticationService;
     private final RefreshTokenService refreshTokenService;
+    private final LogProxyService logProxyService;
 
     @Value("${security.jwt.refresh-token.expiration-time}")
     private int refreshTokenDurationMs;
@@ -111,6 +114,8 @@ public class AuthController {
         // Using response.addHeader to manually set SameSite=Strict if preferred, but
         // basic clear is fine
         response.addCookie(cookie);
+
+        logProxyService.logPost("AuthService", "User logged out", null);
 
         return ResponseEntity.ok(new ApiResponse<>("Logged out successfully", HttpStatus.OK, null));
     }
