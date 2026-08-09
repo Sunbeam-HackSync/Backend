@@ -10,26 +10,25 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.constraints.NotNull;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
     private final HandlerExceptionResolver handlerExceptionResolver;
-
     private final JWTService jwtService;
-
     private final UserService userService;
 
-    public JwtAuthenticationFilter(HandlerExceptionResolver handlerExceptionResolver, JWTService jwtService,
+    public JwtAuthenticationFilter(
+            HandlerExceptionResolver handlerExceptionResolver,
+            JWTService jwtService,
             UserService userService) {
         this.handlerExceptionResolver = handlerExceptionResolver;
         this.jwtService = jwtService;
@@ -38,42 +37,140 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(
-            @NotNull HttpServletRequest request,
-            @NotNull HttpServletResponse response,
-            @NotNull FilterChain filterChain) throws ServletException, IOException {
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
+
         final String authHeader = request.getHeader("Authorization");
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        /*
+         * No Authorization header:
+         *
+         * Treat the request as anonymous and continue.
+         *
+         * This is required for public endpoints such as:
+         *
+         * POST /chat
+         */
+        if (authHeader == null) {
             filterChain.doFilter(request, response);
-
             return;
         }
-        try {
-            final String jwt = authHeader.substring(7);
-            final String userEmail = jwtService.extractUserEmail(jwt);
 
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-            if (userEmail != null && authentication == null) {
-                UserDetails userDetails = this.userService.loadUserByUsername(userEmail);
-
-                if (!userDetails.isAccountNonLocked()) {
-                    throw new UserBannedException("Your account has been banned. You have been logged out.");
-                }
-
-                if (jwtService.isTokenValid(jwt, userDetails)) {
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,
-                            null, userDetails.getAuthorities());
-                    // this is for seeting the user IP address for auditing and logging
-                    // authToken.setDetails(new
-                    // WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                }
-            }
-            filterChain.doFilter(request, response);
-        } catch (Exception e) {
-            handlerExceptionResolver.resolveException(request, response, null, e);
+        /*
+         * Authorization header exists but is malformed.
+         *
+         * Example:
+         *
+         * Authorization: Basic abc123
+         */
+        if (!authHeader.startsWith("Bearer ")) {
+            response.sendError(
+                    HttpServletResponse.SC_UNAUTHORIZED,
+                    "Invalid Authorization header");
+            return;
         }
 
+        try {
+
+            /*
+             * Extract JWT from:
+             *
+             * Authorization: Bearer <JWT>
+             */
+            final String jwt = authHeader.substring(7).trim();
+
+            /*
+             * Reject:
+             *
+             * Authorization: Bearer
+             */
+            if (jwt.isBlank()) {
+                response.sendError(
+                        HttpServletResponse.SC_UNAUTHORIZED,
+                        "Invalid JWT token");
+                return;
+            }
+
+            /*
+             * Extract the user's email from JWT subject.
+             */
+            final String userEmail = jwtService.extractUserEmail(jwt);
+
+            Authentication authentication = SecurityContextHolder
+                    .getContext()
+                    .getAuthentication();
+
+            /*
+             * Authenticate only when there is no existing
+             * authentication in the SecurityContext.
+             */
+            if (userEmail != null && authentication == null) {
+
+                UserDetails userDetails = userService.loadUserByUsername(userEmail);
+
+                /*
+                 * Reject banned users.
+                 */
+                if (!userDetails.isAccountNonLocked()) {
+                    throw new UserBannedException(
+                            "Your account has been banned. You have been logged out.");
+                }
+
+                /*
+                 * JWT exists, so it MUST be valid.
+                 *
+                 * If invalid/expired, stop the request here.
+                 *
+                 * This is especially important because
+                 * POST /chat is permitAll().
+                 */
+                if (!jwtService.isTokenValid(jwt, userDetails)) {
+
+                    response.sendError(
+                            HttpServletResponse.SC_UNAUTHORIZED,
+                            "Invalid or expired JWT token");
+
+                    return;
+                }
+
+                /*
+                 * JWT is valid.
+                 *
+                 * Create the authenticated Spring Security principal.
+                 */
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        null,
+                        userDetails.getAuthorities());
+
+                /*
+                 * Store authenticated user in SecurityContext.
+                 */
+                SecurityContextHolder
+                        .getContext()
+                        .setAuthentication(authToken);
+            }
+
+            /*
+             * JWT was valid and user was authenticated.
+             *
+             * Continue to the requested endpoint.
+             */
+            filterChain.doFilter(request, response);
+
+        } catch (Exception e) {
+
+            /*
+             * Delegate JWT parsing, user lookup, and other
+             * authentication exceptions to the existing
+             * HandlerExceptionResolver.
+             */
+            handlerExceptionResolver.resolveException(
+                    request,
+                    response,
+                    null,
+                    e);
+        }
     }
 }
