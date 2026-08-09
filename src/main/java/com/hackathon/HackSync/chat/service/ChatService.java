@@ -19,14 +19,8 @@ public class ChatService {
      * Processes a chatbot request and forwards it
      * to the GenAI service.
      */
-    public ChatResponse chat(
-            ChatRequest request,
-            String authHeader
-    ) {
+    public ChatResponse chat(ChatRequest request, String authHeader) {
 
-        return genAIClient.chat(
-                request,
-                authHeader
-        );
+        return genAIClient.chat(request, authHeader);
     }
 }

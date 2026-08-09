@@ -23,20 +23,9 @@ public class ChatController {
     @PostMapping
     public ResponseEntity<ChatResponse> chat(
             @Valid @RequestBody ChatRequest request,
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader) {
 
-            @RequestHeader(
-                    value = HttpHeaders.AUTHORIZATION,
-                    required = false
-            )
-            String authHeader
-    ) {
-
-        ChatResponse response =
-                chatService.chat(
-                        request,
-                        authHeader
-                );
-
+        ChatResponse response = chatService.chat(request, authHeader);
         return ResponseEntity.ok(response);
     }
 }
