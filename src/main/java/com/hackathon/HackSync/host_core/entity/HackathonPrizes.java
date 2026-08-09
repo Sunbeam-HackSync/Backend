@@ -10,7 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @Getter
 @Setter
-@ToString(callSuper = true, exclude = {"hackathonId", "trackId"})
+@ToString(callSuper = true, exclude = {"hackathonId"})
 @Table(name = "hackathon_prizes")
 @AttributeOverride(name = "id", column = @Column(name = "hackathon_prize_id"))
 public class HackathonPrizes extends BaseClass {
@@ -18,11 +18,7 @@ public class HackathonPrizes extends BaseClass {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hackathon_id", nullable = false)
     private Hackathons hackathonId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "track_id")
-    private HackathonTracks trackId;
-
+    
     @Column(name = "title")
     private String priceTitle;
 
