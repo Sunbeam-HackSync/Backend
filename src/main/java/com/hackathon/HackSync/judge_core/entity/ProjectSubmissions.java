@@ -1,7 +1,6 @@
 package com.hackathon.HackSync.judge_core.entity;
 
 import com.hackathon.HackSync.auth.entity.Users;
-import com.hackathon.HackSync.host_core.entity.HackathonTracks;
 import com.hackathon.HackSync.host_core.entity.Hackathons;
 import com.hackathon.HackSync.participants_core.entity.Teams;
 import com.hackathon.HackSync.utils.entities.BaseClass;
@@ -14,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Getter
 @Setter
-@ToString(callSuper = true, exclude = { "hackathonId", "teamsId" })
+@ToString(callSuper = true, exclude = {"hackathonId", "teamsId"})
 @Entity
 @AttributeOverride(name = "id", column = @Column(name = "project_submission_id"))
 @Table(name = "project_submissions")
