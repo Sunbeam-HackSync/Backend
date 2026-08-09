@@ -23,7 +23,7 @@ public class SecurityConfiguration {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     public SecurityConfiguration(AuthenticationProvider authenticationProvider,
-            JwtAuthenticationFilter jwtAuthenticationFilter) {
+                                 JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.authenticationProvider = authenticationProvider;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
@@ -37,6 +37,8 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/auth/**", "/v3/api-docs", "/swagger-ui.html", "swagger-ui/index.html",
                                 "/participants/hackathons", "/participants/{id}", "/ws/**", "/ws")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.POST, "/chat")
                         .permitAll()
                         .requestMatchers("/admin/**", "/actuator/**").hasRole("ADMIN")
                         .requestMatchers("/host/**").hasAnyRole("HOST", "ADMIN")
@@ -55,7 +57,7 @@ public class SecurityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfiguration() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.setAllowedOrigins(List.of("http://localhost:5173", "https://backend.com"));
+        corsConfiguration.setAllowedOrigins(List.of("http://localhost:5173", "https://hacksync.prakharverse.me/", "http://localhost:9000"));
         corsConfiguration.setAllowedMethods(List.of("GET", "PUT", "POST", "DELETE", "OPTIONS"));
         corsConfiguration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         corsConfiguration.setAllowCredentials(true);
