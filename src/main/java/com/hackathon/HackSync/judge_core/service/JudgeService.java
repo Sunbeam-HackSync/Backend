@@ -2,6 +2,9 @@ package com.hackathon.HackSync.judge_core.service;
 
 import com.hackathon.HackSync.auth.entity.Users;
 import com.hackathon.HackSync.auth.repository.UserRepository;
+import com.hackathon.HackSync.genai.GenAIClient;
+import com.hackathon.HackSync.genai.dto.SummarizeRequestDTO;
+import com.hackathon.HackSync.genai.dto.SummarizeResponseDTO;
 import com.hackathon.HackSync.host_core.entity.HackathonJudges;
 import com.hackathon.HackSync.host_core.entity.HackathonStatus;
 import com.hackathon.HackSync.host_core.entity.Hackathons;
@@ -47,6 +50,7 @@ public class JudgeService {
         private final JudgesScoresRepository judgesScoresRepository;
         private final EvaluationCriteriaRepository evaluationCriteriaRepository;
         private final HackathonRepository hackathonRepository;
+        private final GenAIClient genAIClient;
 
         public String updateInvitationStatus(Long hackathonId, String statusString, String authenticatedEmail) {
                 Users judge = userRepository.findByEmail(authenticatedEmail)
@@ -325,6 +329,8 @@ public class JudgeService {
                                 .toList();
         }
 
+        
+        
         public JudgeDetailHackathonResponseDTO getHackathonDetailsById(Long hackathonId, String authenticatedEmail) {
                 Users judge = userRepository.findByEmail(authenticatedEmail)
                                 .orElseThrow(() -> new UsernameNotFoundException("Judge not found"));
@@ -365,5 +371,31 @@ public class JudgeService {
                                 .status(hackathonJudge.getStatus())
                                 .isSuperJudge(hackathonJudge.getIsSuperJudge())
                                 .build();
+        }
+
+        public SummarizeResponseDTO summarizeProject(Long hackathonId, SummarizeRequestDTO requestDTO, String authenticatedEmail) {
+                Users judge = userRepository.findByEmail(authenticatedEmail)
+                                .orElseThrow(() -> new UsernameNotFoundException("Judge not found"));
+
+                hackathonJudgesRepository
+                                .findByHackathonsId_IdAndJudgeUserId_Id(hackathonId, judge.getId())
+                                .orElseThrow(() -> new AccessDeniedException(
+                                                "Access Denied: You are not assigned as a judge for this hackathon"));
+
+                requestDTO.setHackathonId(hackathonId);
+                
+                List<EvaluationCriteria> criteriaList = evaluationCriteriaRepository.findByHackathonId_Id(hackathonId);
+                List<com.hackathon.HackSync.genai.dto.GenAICriteriaDTO> genAICriteria = criteriaList.stream().map(c -> 
+                        com.hackathon.HackSync.genai.dto.GenAICriteriaDTO.builder()
+                                .criteriaId(String.valueOf(c.getId()))
+                                .criteriaName(c.getCriteriaName())
+                                .criteriaDescription(c.getDescription())
+                                .maxScore(c.getMaxScore())
+                                .build()
+                ).toList();
+                
+                requestDTO.setCriteriaList(genAICriteria);
+
+                return genAIClient.summarize(requestDTO, null);
         }
 }

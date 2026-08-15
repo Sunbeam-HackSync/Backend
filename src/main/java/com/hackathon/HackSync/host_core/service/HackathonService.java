@@ -72,6 +72,7 @@ public class HackathonService {
     private final PasswordEncoder passwordEncoder;
     private final ImageKitService imageKitService;
     private final HackathonReviewsRepository hackathonReviewsRepository;
+    private final com.hackathon.HackSync.genai.GenAIClient genAIClient;
 
     public HackathonResponse createHackathon(HackathonRequestDTO hackathonRequestDTO, String authenticatedEmail) {
         Users host = userRepository.findByEmail(authenticatedEmail)
@@ -725,5 +726,16 @@ public class HackathonService {
                 .description(criteria.getDescription())
                 .maxScore(criteria.getMaxScore())
                 .build()).toList();
+    }
+
+    public com.hackathon.HackSync.genai.dto.DescriptionResponseDTO generateDescription(com.hackathon.HackSync.genai.dto.DescriptionRequestDTO requestDTO, String email) {
+        Users host = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (!host.getRole().equals(ROLE.HOST) && !host.getRole().equals(ROLE.ADMIN)) {
+            throw new AccessDeniedException("Access Denied: Only HOSTs or ADMINs can generate descriptions");
+        }
+
+        return genAIClient.generateDescription(requestDTO, null);
     }
 }

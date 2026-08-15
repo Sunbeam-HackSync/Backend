@@ -1,5 +1,6 @@
 package com.hackathon.HackSync.judge_core.controller;
 
+import com.hackathon.HackSync.genai.dto.SummarizeResponseDTO;
 import com.hackathon.HackSync.judge_core.dto.AssignedHackathonResponseDTO;
 import com.hackathon.HackSync.judge_core.dto.EvaluationCriteriaResponseDTO;
 import com.hackathon.HackSync.judge_core.dto.JudgeDetailHackathonResponseDTO;
@@ -114,5 +115,17 @@ public class JudgeController {
                 return ResponseEntity
                                 .ok(new ApiResponse<>("Hackathon details retrieved successfully", HttpStatus.OK,
                                                 details));
+        }
+
+        @PostMapping("/hackathon/{hackathonId}/summarize")
+        public ResponseEntity<ApiResponse<SummarizeResponseDTO>> summarizeProject(
+                        @PathVariable Long hackathonId,
+                        @RequestBody com.hackathon.HackSync.genai.dto.SummarizeRequestDTO requestDTO,
+                        Principal principal) {
+                String email = principal.getName();
+                SummarizeResponseDTO response = judgeService.summarizeProject(hackathonId, requestDTO, email);
+                return new ResponseEntity<>(
+                                new ApiResponse<>("Project summarized successfully", HttpStatus.OK, response),
+                                HttpStatus.OK);
         }
 }

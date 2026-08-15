@@ -207,4 +207,15 @@ public class HackathonController {
                                 HttpStatus.OK);
         }
 
+        @PostMapping("/hackathon/generate-description")
+        public ResponseEntity<ApiResponse<com.hackathon.HackSync.genai.dto.DescriptionResponseDTO>> generateDescription(
+                        @RequestBody com.hackathon.HackSync.genai.dto.DescriptionRequestDTO requestDTO,
+                        Principal principal) {
+                String email = principal.getName();
+                com.hackathon.HackSync.genai.dto.DescriptionResponseDTO response = hackathonService.generateDescription(requestDTO, email);
+                return new ResponseEntity<>(
+                                new ApiResponse<>("Description generated successfully", HttpStatus.OK, response),
+                                HttpStatus.OK);
+        }
+
 }
